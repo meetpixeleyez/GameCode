@@ -173,3 +173,55 @@ Stage Summary:
   * src/components/product/product-purchase-sidebar.tsx (interactive purchase sidebar)
 
 - Phase 1 progress: ~80% complete (homepage + auth + products + product detail + cart + checkout + thank-you done; remaining: user dashboard, static pages, CI/CD, staging deploy)
+
+---
+Task ID: phase-1-foundation-day-4
+Agent: Principal Architect (Main)
+Task: Build user dashboard (overview, purchases, downloads, profile) and static pages (about, contact, privacy, terms, refund). Completes the post-purchase loop and content parity with live site.
+
+Work Log:
+- Built LogoutButton client component (calls POST /api/auth/logout, redirects to /login, toast notification, loading state)
+- Built /dashboard/layout.tsx with sidebar: user card (avatar, name, email, balance), nav links (Dashboard, Purchases, Downloads, Profile, Seller Dashboard if author), Sign Out button. Auth-gated — redirects to /login if unauthenticated.
+- Fixed /dashboard/page.tsx (was using session.userId which doesn't exist; now uses session.sub): Welcome header, 4 stat cards (Total Purchases, Total Spent, Cart Items, Account Type), seller stats section (if author: Total Sales, Revenue, Avg Rating, Reviews), Recent Orders list (5 most recent), Quick Actions grid (Downloads, Profile Settings)
+- Built /dashboard/purchases/page.tsx: full order history with filter by trx (?order=XXX), each order shows trx, date, item count, total, paid badge; each item shows thumbnail, title, license + addon badges, purchase code, download button
+- Built /dashboard/downloads/page.tsx: grid of all purchased products with thumbnail, title, license badges, purchase code, purchase date, Download + View buttons, license info card
+- Built /dashboard/profile/page.tsx (client component): 4 sections — Personal Information (firstname, lastname, username), Contact Information (email readonly, dial code, mobile), Address Information (address, city, state, zip, country), Security (change password link); Save Changes + Reset buttons; fetches from GET /api/profile, saves via PATCH /api/profile
+- Built GET/PATCH /api/profile: GET returns full profile, PATCH validates with Zod (username unique check, all fields max length), marks profileComplete=1
+- Built /about page: hero section, 4 stats, 3 value cards (Code Quality, Verified Licenses, Ready to Publish), 8 features checklist, CTA section
+- Built /contact page (client component): 3 contact methods (email, phone, WhatsApp), contact form (name, email, subject, message), 5 FAQ accordion
+- Built POST /api/contact: validates with Zod, creates SupportTicket (8-digit ticket number, status=OPEN, priority=MEDIUM), creates SupportMessage, creates AdminNotification
+- Built reusable PolicyLayout component + getPolicyPage helper (loads from DB Frontend/Page tables, falls back to default content)
+- Built /privacy-policy page: 8 sections (Introduction, Information We Collect, How We Use, Information Sharing, Data Security, Cookies, Your Rights, Contact)
+- Built /terms-conditions page: 10 sections (Agreement, License Types, Additional Services, Prohibited Activities, Seller Agreement, Refunds, Limitation of Liability, Changes, Contact)
+- Built /refund-policy page: 8 sections (Digital Product Refunds, Refund Eligibility, Non-Refundable Cases, How to Request, Refund Method, Seller-Issued Refunds, Contact)
+
+Stage Summary:
+- All routes verified:
+  * Public: / /login /register /products /cart /checkout /about /contact /privacy-policy /terms-conditions /refund-policy → all HTTP 200
+  * API: /api/auth/me /api/cart /api/profile (401 without auth) → all working
+  * Auth-gated: /dashboard /dashboard/purchases /dashboard/downloads /dashboard/profile → all 307 redirect when unauth, 200 when auth
+- Authenticated flow verified:
+  * Login as buyer@test.com → success
+  * GET /api/profile → returns full profile
+  * All 4 dashboard pages return 200 with auth
+  * PATCH /api/profile → username updated (testb → testbuyer), city + country set, profileComplete=1
+  * POST /api/contact → support ticket created with ticket number 87578224, AdminNotification created
+- ESLint passes clean
+
+- Files added:
+  * src/components/auth/logout-button.tsx
+  * src/app/dashboard/layout.tsx (sidebar nav)
+  * src/app/dashboard/page.tsx (rewritten — fixed session.sub)
+  * src/app/dashboard/purchases/page.tsx
+  * src/app/dashboard/downloads/page.tsx
+  * src/app/dashboard/profile/page.tsx (client component)
+  * src/app/api/profile/route.ts (GET + PATCH)
+  * src/app/api/contact/route.ts (POST — creates support ticket)
+  * src/app/about/page.tsx
+  * src/app/contact/page.tsx (client component with form + FAQ)
+  * src/components/policy/policy-layout.tsx (reusable layout + DB loader)
+  * src/app/privacy-policy/page.tsx
+  * src/app/terms-conditions/page.tsx
+  * src/app/refund-policy/page.tsx
+
+- Phase 1 progress: ~95% complete (all user-facing pages done; remaining: CI/CD pipeline + staging deploy)
