@@ -269,3 +269,47 @@ Stage Summary:
   * prisma/seed-reviews.ts (13 reviews + 8 comments + 4 reviewer users)
 
 - Phase 2 progress: ~40% complete (blog + authors + free products + reviews + comments done; remaining: search, follow system, collections detail, seller dashboard)
+
+---
+Task ID: phase-2-catalog-day-2
+Agent: Principal Architect (Main)
+Task: Build seller dashboard — product management, earnings, withdrawals, reviews. Completes the seller side of the marketplace.
+
+Work Log:
+- Built /seller/layout.tsx with auth-gated sidebar: seller card (avatar, name, 4 mini-stats: balance/sales/revenue/rating), nav (Dashboard, My Products, Earnings, Withdrawals, Reviews, Buyer Dashboard link), Sign Out button. Shows "Become a Seller" prompt if user.isAuthor !== 1.
+- Built /seller dashboard overview: welcome + Upload Product button, 4 stat cards (Total Revenue, Total Sales, Products, Rating), balance card with Request Withdrawal CTA, Recent Sales list (5 most recent with title/date/license/earning), Product Status breakdown (group by status), Recent Products list (5 most recent with status badge + view button)
+- Built /seller/products: status filter tabs (All + 6 status counts), product list with thumbnail, title, price, sales count, rating, featured/free badges, status badge, view button. Empty states for no products + no products in filtered status.
+- Built /seller/products/new: 4-section form — Basic Information (title, description HTML, tags), Pricing (personal/commercial license + 3 addon service prices), Demo & Media (demo URL, preview video URL, note about file uploads post-creation), SEO (meta title, meta description). Submit for Review button with loading state.
+- Built POST /api/products: auth + author verification, Zod validation, auto-generates unique slug, creates product with status=0 (PENDING), creates Activity log "Product submitted for review"
+- Built /seller/earnings: balance card with Request Withdrawal CTA, 3 stat cards (Total Revenue, Total Credits, Total Debits), Recent Sales list (20 most recent with product/license/addon details + earning breakdown), Transaction History ledger (50 most recent with details, remark badge, +/- amount, post-balance)
+- Built /seller/withdrawals (client component): balance card, withdrawal form (amount, method dropdown: Google Pay/Bank Transfer/PayPal, account info textarea with dynamic placeholder), withdrawal history list with status badges. Min $5, 1% fee, blocks if pending withdrawal exists.
+- Built GET/POST /api/withdrawals: GET lists user's withdrawals, POST validates (min $5, sufficient balance, no pending withdrawal), calculates 1% charge (min $1), creates withdrawal + transaction in DB transaction, decrements user balance, creates AdminNotification
+- Built /seller/reviews: summary card (avg rating + 5-star distribution bar chart), All Reviews list with reviewer avatar/name/country, product link, star rating, review text, date, reported badge
+
+Stage Summary:
+- All seller routes verified:
+  * /seller (dashboard) → 200
+  * /seller/products → 200
+  * /seller/products/new → 200
+  * /seller/earnings → 200
+  * /seller/withdrawals → 200
+  * /seller/reviews → 200
+- All seller APIs verified:
+  * POST /api/products → 201 (created "Test Unity Game Template" with slug, status=pending)
+  * POST /api/withdrawals → 201 (created $50 withdrawal with trx TXWODNGXXDCQ, balance decremented)
+  * GET /api/withdrawals → 200 (returns withdrawal history)
+- Auth-gated: all /seller/* routes return 307 redirect when unauthenticated
+- ESLint passes clean (fixed unused eslint-disable warning)
+
+- Files added:
+  * src/app/seller/layout.tsx (sidebar + become-seller prompt)
+  * src/app/seller/page.tsx (dashboard overview)
+  * src/app/seller/products/page.tsx (product list + status filters)
+  * src/app/seller/products/new/page.tsx (upload form, client component)
+  * src/app/seller/earnings/page.tsx (transaction ledger)
+  * src/app/seller/withdrawals/page.tsx (withdrawal request + history, client component)
+  * src/app/seller/reviews/page.tsx (reviews received + distribution)
+  * src/app/api/products/route.ts (POST — create product)
+  * src/app/api/withdrawals/route.ts (GET + POST)
+
+- Phase 2 progress: ~70% complete (blog + authors + free products + reviews + comments + seller dashboard done; remaining: search, follow system, collections detail, admin panel)
