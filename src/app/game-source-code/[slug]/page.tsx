@@ -4,6 +4,8 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductPurchaseSidebar } from "@/components/product/product-purchase-sidebar";
+import { ReviewsSection } from "@/components/review/reviews-section";
+import { CommentsSection } from "@/components/review/comments-section";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -253,13 +255,24 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             </TabsContent>
 
             <TabsContent value="comments" className="mt-4">
-              <div className="rounded-lg border border-border p-6 text-center text-muted-foreground">
-                <p className="text-sm">
-                  Reviews and comments will appear here. Sign in to leave a review.
-                </p>
-                <Button variant="outline" size="sm" className="mt-3" asChild>
-                  <Link href="/login">Sign In to Review</Link>
-                </Button>
+              <div className="space-y-8">
+                {/* Reviews subsection */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-4">Reviews</h3>
+                  <ReviewsSection
+                    productId={product.id}
+                    initialAvgRating={product.avgRating}
+                    initialTotalReview={product.totalReview}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Comments subsection */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-4">Comments</h3>
+                  <CommentsSection productId={product.id} />
+                </div>
               </div>
             </TabsContent>
 

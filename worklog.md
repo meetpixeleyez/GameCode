@@ -225,3 +225,47 @@ Stage Summary:
   * src/app/refund-policy/page.tsx
 
 - Phase 1 progress: ~95% complete (all user-facing pages done; remaining: CI/CD pipeline + staging deploy)
+
+---
+Task ID: phase-2-catalog-day-1
+Agent: Principal Architect (Main)
+Task: Build Phase 2 Catalog features — blog (listing + detail), author profiles, free products page, reviews + comments system on product detail page.
+
+Work Log:
+- Built /blog listing page: header, category filter chips (All + 4 categories), grid of blog posts (cover, category badge, title, excerpt, date), empty state
+- Built /blog/[slug] detail page: back-to-blog link, category badge, title + excerpt + date, cover image, HTML body (rendered with prose styling), separator, share actions (All Posts + Browse Products), related articles grid (same category, fallback to recent)
+- Built /authors/[username] public author profile: breadcrumb, profile header (avatar, name, featured badge, location, member since, 4 stats: Products/Sales/Reviews/Followers), Follow + Contact + Browse buttons, tabs (Products grid + Collections list)
+- Built /free-products page: hero with "Free Game Source Codes", CTA banner showing count, products grouped by category
+- Built reviews API: GET /api/products/[productId]/reviews (lists with user info + avg rating), POST /api/products/[productId]/reviews (auth required, must have purchased, cannot review own product, cannot review twice, updates product + author aggregates)
+- Built comments API: GET /api/products/[productId]/comments (top-level comments + nested replies), POST /api/products/[productId]/comments (auth required, supports parentId for replies, checks comment_disable flag)
+- Built ReviewsSection client component: avg rating display, star rating picker (hover state), review text form, posts via API, updates list live, sign-in CTA if unauthenticated, empty state
+- Built CommentsSection client component: new comment form, nested reply forms (toggle per comment), reply display with CornerDownRight icon, sign-in CTA if unauthenticated
+- Wired ReviewsSection + CommentsSection into product detail page Comments tab (replaced placeholder)
+- Created seed-reviews.ts: 4 reviewer users (John/Maria/Chen/Anya from US/Spain/China/Russia), 13 reviews (2-3 per product, 70% 5-star, 30% 4-star, with country hints matching Laravel Artisan style), 8 comments (50% with author replies), updated product + seller aggregates
+- Fixed schema: added Comment self-relation for replies (parent + replies @relation("CommentReplies"))
+
+Stage Summary:
+- All routes verified HTTP 200:
+  * /blog (listing)
+  * /blog/app-store-copywriting-high-converting-listing-pages (detail)
+  * /authors/readygamecode (author profile)
+  * /free-products (free items)
+  * /game-source-code/[slug] (product detail with reviews + comments)
+- APIs verified:
+  * GET /api/products/[id]/reviews → returns 13 reviews with avg 4.8 rating
+  * GET /api/products/[id]/comments → returns comments with nested replies
+- Content verified: blog posts render, author profile shows stats, free products page shows count, product detail has Reviews + Comments sections
+- ESLint passes clean
+
+- Files added:
+  * src/app/blog/page.tsx (listing with category filter)
+  * src/app/blog/[slug]/page.tsx (detail with related posts)
+  * src/app/authors/[username]/page.tsx (public author profile)
+  * src/app/free-products/page.tsx
+  * src/app/api/products/[productId]/reviews/route.ts (GET + POST)
+  * src/app/api/products/[productId]/comments/route.ts (GET + POST)
+  * src/components/review/reviews-section.tsx (client component)
+  * src/components/review/comments-section.tsx (client component)
+  * prisma/seed-reviews.ts (13 reviews + 8 comments + 4 reviewer users)
+
+- Phase 2 progress: ~40% complete (blog + authors + free products + reviews + comments done; remaining: search, follow system, collections detail, seller dashboard)

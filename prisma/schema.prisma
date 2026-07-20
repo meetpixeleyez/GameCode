@@ -583,6 +583,8 @@ model Comment {
   productId    String
   product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   parentId     String?  // nested replies
+  parent       Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[] @relation("CommentReplies")
   text         String?
   isReported   Int      @default(0)
   reportReason String?
