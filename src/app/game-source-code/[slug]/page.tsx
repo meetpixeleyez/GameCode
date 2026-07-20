@@ -3,21 +3,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
+import { ProductPurchaseSidebar } from "@/components/product/product-purchase-sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ShoppingCart,
   Star,
   Eye,
   Download,
   PlayCircle,
-  Shield,
-  RefreshCw,
-  FileCode,
   Users,
-  CheckCircle2,
   Tag,
   Mail,
 } from "lucide-react";
@@ -296,78 +292,25 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         {/* Sidebar - 1/3 width */}
         <div className="space-y-6">
-          {/* Purchase card */}
-          <div className="rounded-lg border border-border bg-card p-6 sticky top-24">
-            <div className="space-y-4">
-              {/* Price */}
-              <div>
-                <div className="text-3xl font-bold text-primary">
-                  ${product.price.toFixed(2)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Personal License · one-time payment
-                </p>
-              </div>
-
-              <Button className="w-full" size="lg">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
-              </Button>
-
-              <Button variant="outline" className="w-full" size="lg" asChild>
-                <a
-                  href={product.demoUrl || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  Live Preview
-                </a>
-              </Button>
-
-              <Separator />
-
-              {/* Addon services */}
-              <div>
-                <h4 className="font-semibold text-sm mb-3">Additional Services</h4>
-                <div className="space-y-2">
-                  <AddonService
-                    icon={RefreshCw}
-                    label="Reskin"
-                    price={product.reskinPrice}
-                  />
-                  <AddonService
-                    icon={FileCode}
-                    label="Publish"
-                    price={product.publishPrice}
-                  />
-                  <AddonService
-                    icon={Shield}
-                    label="Store Optimization"
-                    price={product.storeOptimizationPrice}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Trust badges */}
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Future Updates Included
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  3 Months Support
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Secure Payment via Razorpay / PayPal
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Purchase card — interactive client component */}
+          <ProductPurchaseSidebar
+            product={{
+              id: product.id,
+              title: product.title,
+              slug: product.slug,
+              price: product.price,
+              priceCl: product.priceCl,
+              reskinPrice: product.reskinPrice,
+              publishPrice: product.publishPrice,
+              storeOptimizationPrice: product.storeOptimizationPrice,
+              demoUrl: product.demoUrl,
+              category: product.category ? {
+                personalBuyerFee: product.category.personalBuyerFee,
+                commercialBuyerFee: product.category.commercialBuyerFee,
+                twelveMonthExtendedFee: product.category.twelveMonthExtendedFee,
+              } : null,
+            }}
+          />
 
           {/* Author card */}
           <div className="rounded-lg border border-border bg-card p-6">
@@ -449,31 +392,5 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </section>
       )}
     </div>
-  );
-}
-
-function AddonService({
-  icon: Icon,
-  label,
-  price,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  price: number;
-}) {
-  return (
-    <label className="flex items-center justify-between gap-2 p-2 rounded-md hover:bg-accent/50 cursor-pointer transition-colors">
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          className="rounded border-border"
-        />
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm">{label}</span>
-      </div>
-      <span className="text-sm font-medium">
-        +${price.toFixed(2)}
-      </span>
-    </label>
   );
 }

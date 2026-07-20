@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { setAuthCookies } from "@/lib/auth";
+import { transferGuestCartToUser } from "@/lib/cart-session";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -88,6 +89,12 @@ export async function POST(req: NextRequest) {
       role: "user",
       username: user.username,
     });
+
+    // Transfer guest cart items to this user (if any)
+    const guestSession = req.cookies.get("rgc_guest_session")?.value;
+    if (guestSession) {
+      await transferGuestCartToUser(user.id, guestSession);
+    }
 
     return NextResponse.json(
       {

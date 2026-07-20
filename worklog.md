@@ -128,3 +128,48 @@ Stage Summary:
   * src/app/game-source-code/[slug]/page.tsx (product detail with 3 tabs + sticky sidebar)
 
 - Phase 1 progress: ~60% complete (homepage + auth + product listing + product detail done; remaining: cart checkout, dashboard, static pages)
+
+---
+Task ID: phase-1-foundation-day-3
+Agent: Principal Architect (Main)
+Task: Build cart + checkout flow — the highest-value commerce path. Includes guest cart (cookie-based session), cart API, interactive cart page, checkout page with payment method selection, order creation with seller earning calculation, and thank-you page with download links.
+
+Work Log:
+- Built cart session helper (src/lib/cart-session.ts): getCartContext() returns userId for authed users OR sessionId (UUID cookie, 10-year expiry) for guests; transferGuestCartToUser() merges guest cart into user cart on login/register (matches Laravel transferCartItemsToUser logic)
+- Updated login + register API routes to call transferGuestCartToUser on auth success
+- Built cart API: GET /api/cart (lists items with totals), POST /api/cart (add to cart with license + addon services + extended license, prevents duplicates, prevents self-purchase), DELETE /api/cart/[id] (remove item), PATCH /api/cart/[id] (toggle license personal↔commercial, toggle extended, toggle addon services with live total recalculation)
+- Rebuilt /cart page as interactive client component: license radio picker (Personal/Commercial), extended license checkbox, 3 addon service checkboxes (Reskin/Publish/Store Optimization), remove button, sticky order summary with subtotal breakdown (buyer fee, extended, addons, discount, total), checkout button, empty state
+- Built /checkout page: order items list, 4 payment methods (Razorpay recommended/PayPal/Manual UPI/Wallet Balance — wallet disabled if insufficient balance), order summary, demo-mode notice, Pay button
+- Built POST /api/checkout: validates auth + cart non-empty + not buying own products, creates Order + OrderItems in transaction, calculates seller fee from AuthorLevel.fee%, calculates seller_earning = (price - (seller_fee + discount)) + extended + addons, generates purchase_code (Laravel-format: userId-productId-random-timestamp), credits seller balance + increments counters, creates seller credit + seller fee debit transactions, creates deposit record (status=PAID for dev mock), creates buyer debit transaction, clears cart
+- Built /checkout/thank-you page: success header with checkmark, order number + date, total paid, download list with purchase codes, license info, next steps (View Purchases / Continue Shopping), support contact link
+- Built AddToCartButton reusable client component with loading + added states, used in ProductCard and ProductPurchaseSidebar
+- Built ProductPurchaseSidebar client component for product detail page: license picker, extended toggle, addon service toggles, live total calculation, Add to Cart button, trust badges
+- Updated product detail page to use ProductPurchaseSidebar (replaced static sidebar)
+- Fixed schema: Transaction.trx changed from @unique to @index (multiple transactions share order trx — matches Laravel schema)
+- Fixed product detail page: removed unused AddonService function and unused imports
+
+Stage Summary:
+- Full e-commerce flow verified end-to-end:
+  1. Registered buyer account (buyer@test.com / Test1234)
+  2. Added "Draw and Color" product to cart with Reskin addon ($18 + $1 buyer fee + $120 reskin = $139)
+  3. Checkout via Razorpay (mock payment) → success, order created with trx P9ON8D731SVQ
+  4. Thank-you page rendered with order details, purchase code, download button
+  5. Cart cleared after checkout (count: 0)
+  6. Seller balance increased: 1926 → 2058.60 (earned $132.60 = $120 reskin + $18 - 5.40 seller fee at 30%)
+  7. Seller totalSold: 50 → 51, totalSoldAmount: 1926 → 2053.20
+- Guest cart flow verified: guest can add to cart, login transfers cart to user account
+- All routes return HTTP 200 (or 307 for auth-protected /dashboard redirect)
+- ESLint passes clean
+
+- Files added this session:
+  * src/lib/cart-session.ts (guest session + cart transfer helper)
+  * src/app/api/cart/route.ts (GET + POST)
+  * src/app/api/cart/[id]/route.ts (DELETE + PATCH)
+  * src/app/api/checkout/route.ts (POST — order creation + seller earning calc)
+  * src/app/cart/page.tsx (interactive client component, rewritten)
+  * src/app/checkout/page.tsx (payment method selection)
+  * src/app/checkout/thank-you/page.tsx (order confirmation + downloads)
+  * src/components/product/add-to-cart.tsx (reusable AddToCartButton + useAddToCart hook)
+  * src/components/product/product-purchase-sidebar.tsx (interactive purchase sidebar)
+
+- Phase 1 progress: ~80% complete (homepage + auth + products + product detail + cart + checkout + thank-you done; remaining: user dashboard, static pages, CI/CD, staging deploy)

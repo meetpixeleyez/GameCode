@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Star, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AddToCartButton } from "./add-to-cart";
 
 interface ProductCardProps {
   product: {
@@ -81,10 +81,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="font-bold text-lg text-primary">
             ${product.price.toFixed(2)}
           </div>
-          <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-            <ShoppingCart className="h-4 w-4" />
-            <span className="sr-only">Add to cart</span>
-          </Button>
+          <AddToCartButton
+            productId={product.id}
+            variant="outline"
+            size="sm"
+            label="Add"
+          />
         </div>
       </div>
     </div>

@@ -480,12 +480,14 @@ model Transaction {
   charge       Float    @default(0)
   postBalance  Float    @default(0)
   trxType      String?  // "+" credit, "-" debit
-  trx          String?  @unique
+  trx          String?  // shared across related transactions (not unique — Laravel-compatible)
   details      String?
   remark       String?  // payment, purchase, new_sale, balance_add, seller_fee, etc.
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@index([trx])
+  @@index([userId])
   @@map("transactions")
 }
 
