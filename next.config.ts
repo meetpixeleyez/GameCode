@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  images: {
+    // Allow SVG product placeholder images (production should use real PNG/JPG)
+    dangerouslyAllowSVG: true,
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

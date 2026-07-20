@@ -84,3 +84,47 @@ Stage Summary:
   * Reviewer: pranav@readygamecode.com / reviewer123
   * Seller:   readygamecode@example.com / seller123
 - Phase 1 progress: ~30% complete (homepage done, remaining: auth module, user module, static pages, deploy)
+
+---
+Task ID: phase-1-foundation-day-2
+Agent: Principal Architect (Main)
+Task: Build auth module (login/register/logout APIs + pages) and product detail page /game-source-code/[slug]. Also built products listing page with filters.
+
+Work Log:
+- Built JWT auth library (src/lib/auth.ts) using jose library: createAccessToken (15min), createRefreshToken (7d), verifyAccessToken, verifyRefreshToken, setAuthCookies (httpOnly+Secure+SameSite=Lax), clearAuthCookies, getCurrentUser
+- Built POST /api/auth/login — accepts username OR email, verifies bcrypt password (supports both $2y$ Laravel and $2b$ Node prefixes via bcryptjs), on success rehashes password from $2y$ to $2b$ at cost 12, updates user.passwordAlgo field, issues JWT in cookies
+- Built POST /api/auth/register — Zod-validated (firstname, lastname, email unique, password min 6 with upper/lower/number, confirmPassword match, agree=true), auto-generates unique username, creates user with profileComplete=0 (forces profile completion on first login)
+- Built POST /api/auth/logout — clears auth cookies
+- Built GET /api/auth/me — returns current user from JWT or null
+- Built /login page — Google OAuth button, email/username + password form, show/hide password toggle, Remember Me checkbox, Forgot Password link, redirect param support, loading state, toast notifications
+- Built /register page — Google OAuth button, first/last name, email, password with strength hint, confirm password, terms agreement (Privacy/Terms/Refund links), loading state, Zod validation error display
+- Built /products listing page — sidebar filters (search, price min/max, category, date range with counts), sort buttons (New Item, Best Rated, Best Selling), active filter badges with clear button, empty state, 24-product grid
+- Built /game-source-code/[slug] product detail page — breadcrumb, preview image with hover video play, title + rating + sales count, author link with badge, 3 tabs (Description/Comments/Changelog), live preview + APK download buttons, YouTube embed for preview_video, sticky purchase sidebar (price, Add to Cart, addon services with checkboxes, trust badges), author card with portfolio link, tags cloud, support contact, "More items by author" grid
+- Fixed pre-existing cart/page.tsx and dashboard/page.tsx — replaced `getSession` (non-existent) with `getCurrentUser` (actual export)
+
+Stage Summary:
+- Verification:
+  * HTTP 200: /, /login, /register, /products, /game-source-code/[slug], /api/auth/me, /cart
+  * HTTP 307: /dashboard (redirects to login when unauthenticated — correct)
+  * HTTP 404: /game-source-code/non-existent-slug (correct)
+  * Auth flow verified end-to-end:
+    - Login with seeded seller (readygamecode@example.com / seller123) → success, JWT cookies set
+    - /api/auth/me with cookies → returns full user object
+    - Register with existing email → 409 "Email already registered"
+    - Login with wrong password → 401 "Invalid credentials"
+  * Password rehash verified: seller's password migrated from $2y$ (Laravel) → $2b$ (Node) on first login, passwordAlgo field updated to "bcrypt-2b"
+  * Products page filters verified: search, sort_by, min_price/max_price, category — all return HTTP 200
+  * ESLint passes clean (zero errors/warnings)
+
+- Files added:
+  * src/lib/auth.ts (JWT + cookie helpers, 110 lines)
+  * src/app/api/auth/login/route.ts
+  * src/app/api/auth/register/route.ts
+  * src/app/api/auth/logout/route.ts
+  * src/app/api/auth/me/route.ts
+  * src/app/login/page.tsx (login form with Google OAuth)
+  * src/app/register/page.tsx (register form with terms agreement)
+  * src/app/products/page.tsx (listing with sidebar filters + sort)
+  * src/app/game-source-code/[slug]/page.tsx (product detail with 3 tabs + sticky sidebar)
+
+- Phase 1 progress: ~60% complete (homepage + auth + product listing + product detail done; remaining: cart checkout, dashboard, static pages)
