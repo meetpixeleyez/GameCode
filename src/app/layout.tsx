@@ -4,6 +4,9 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { getCurrentUser } from "@/lib/auth";
+import { getCartContext } from "@/lib/cart-session";
+import { db } from "@/lib/db";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -60,17 +63,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getCurrentUser();
+  const cartCtx = await getCartContext();
+  const cartCount = await db.cart.count({
+    where: cartCtx.userId ? { userId: cartCtx.userId } : { sessionId: cartCtx.sessionId },
+  });
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
-        <Header />
+        <Header session={session} cartCount={cartCount} />
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />

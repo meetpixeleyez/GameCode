@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ export function FavoriteButton({ productId, initialIsFavorited, className, size 
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   async function toggleFavorite(e: React.MouseEvent) {
     e.preventDefault(); // Prevent triggering parent links if embedded in a card
@@ -44,6 +46,9 @@ export function FavoriteButton({ productId, initialIsFavorited, className, size 
           ? "This product has been saved to your dashboard." 
           : "This product was removed from your saved list.",
       });
+
+      // Refresh the page data so lists (like the favorites page) update instantly
+      router.refresh();
     } catch (error: any) {
       toast({
         title: "Error",

@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, User, Store } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
+  const roleParam = searchParams.get("role") as "buyer" | "seller" | null;
   const { toast } = useToast();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -27,6 +29,7 @@ function RegisterForm() {
     confirmPassword: "",
     agree: false,
     refBy: ref || "",
+    role: roleParam === "seller" ? "seller" : "buyer",
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -85,9 +88,27 @@ function RegisterForm() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">Sign Up to Ready Game Code</h1>
           <p className="text-muted-foreground mt-2">
-            Create your account to start buying and selling game source codes.
+            Create your account to start buying or selling game source codes.
           </p>
         </div>
+
+        <Tabs
+          defaultValue="buyer"
+          value={form.role}
+          onValueChange={(val) => setForm({ ...form, role: val })}
+          className="mb-8"
+        >
+          <TabsList className="grid w-full grid-cols-2 h-12">
+            <TabsTrigger value="buyer" className="text-base gap-2">
+              <User className="h-4 w-4" />
+              Buyer
+            </TabsTrigger>
+            <TabsTrigger value="seller" className="text-base gap-2">
+              <Store className="h-4 w-4" />
+              Seller
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {/* Google OAuth */}
         <Button variant="outline" className="w-full mb-6" size="lg" asChild>
@@ -217,28 +238,32 @@ function RegisterForm() {
             </div>
           </div>
 
-          <div className="flex items-start space-x-2">
+          <div className="flex items-start gap-3 pt-2">
             <Checkbox
               id="agree"
               checked={form.agree}
               onCheckedChange={(checked) =>
                 setForm({ ...form, agree: checked === true })
               }
+              className="mt-1 flex-shrink-0"
             />
-            <Label htmlFor="agree" className="text-sm cursor-pointer leading-relaxed">
-              I agree with the{" "}
-              <Link href="/privacy-policy" className="text-primary hover:underline">
+            <div className="text-sm text-muted-foreground leading-relaxed">
+              <label htmlFor="agree" className="cursor-pointer hover:text-foreground">
+                I agree with the{" "}
+              </label>
+              <Link href="/privacy-policy" className="text-primary hover:underline font-medium">
                 Privacy Policy
               </Link>
-              ,{" "}
-              <Link href="/terms-conditions" className="text-primary hover:underline">
+              {", "}
+              <Link href="/terms-conditions" className="text-primary hover:underline font-medium">
                 Terms of Service
               </Link>
-              , and{" "}
-              <Link href="/refund-policy" className="text-primary hover:underline">
+              {", and "}
+              <Link href="/refund-policy" className="text-primary hover:underline font-medium">
                 Refund Policy
               </Link>
-            </Label>
+              .
+            </div>
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>

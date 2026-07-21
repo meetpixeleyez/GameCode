@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,34 +10,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { JwtPayload } from "@/lib/auth";
+import { SearchBar } from "@/components/SearchBar";
 
 const navLinks = [
-  { label: "All Items", href: "/#products" },
+  { label: "All Items", href: "/products" },
   { label: "About", href: "/about" },
   { label: "Resources", href: "/blog" },
   {
     label: "Game",
-    href: "/#products",
+    href: "/products",
     children: [
-      { label: "Puzzle", href: "/#products" },
-      { label: "Casual", href: "/#products" },
-      { label: "Platformer", href: "/#products" },
-      { label: "Action", href: "/#products" },
-      { label: "Racing", href: "/#products" },
-      { label: "Multiplayer", href: "/#products" },
+      { label: "Puzzle", href: "/products?category=puzzle" },
+      { label: "Casual", href: "/products?category=casual" },
+      { label: "Platformer", href: "/products?category=platformer" },
+      { label: "Action", href: "/products?category=action" },
+      { label: "Racing", href: "/products?category=racing" },
+      { label: "Multiplayer", href: "/products?category=multiplayer" },
     ],
   },
   {
     label: "Services",
-    href: "/#products",
+    href: "/products",
     children: [
-      { label: "Technical Support", href: "/#products" },
+      { label: "Technical Support", href: "/products" },
     ],
   },
 ];
 
-export function Header() {
+export function Header({ session, cartCount = 0 }: { session: JwtPayload | null; cartCount?: number }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (!pathname) return false;
+    const baseHref = href.split("?")[0];
+    if (baseHref === "/") return pathname === "/";
+    return pathname.startsWith(baseHref);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass transition-all duration-300">
@@ -71,11 +82,16 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) =>
-              link.children ? (
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return link.children ? (
                 <DropdownMenu key={link.label}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`text-sm ${active ? "text-primary font-semibold bg-primary/5" : ""}`}
+                    >
                       {link.label}
                     </Button>
                   </DropdownMenuTrigger>
@@ -88,25 +104,24 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button key={link.label} variant="ghost" size="sm" asChild>
+                <Button 
+                  key={link.label} 
+                  variant="ghost" 
+                  size="sm" 
+                  asChild
+                  className={active ? "text-primary font-semibold bg-primary/5" : ""}
+                >
                   <Link href={link.href} className="text-sm">
                     {link.label}
                   </Link>
                 </Button>
-              )
-            )}
+              );
+            })}
           </nav>
 
           {/* Search */}
-          <div className="hidden md:flex items-center flex-1 max-w-sm">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-            </div>
+          <div className="hidden md:flex items-center flex-1 max-w-sm justify-end lg:justify-center">
+            <SearchBar />
           </div>
 
           {/* Right actions */}
@@ -115,17 +130,27 @@ export function Header() {
               <Link href="/cart" aria-label="Cart">
                 <ShoppingCart className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                  0
+                  {cartCount}
                 </span>
               </Link>
             </Button>
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/register">Register</Link>
-              </Button>
+              {session ? (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="/dashboard/profile" aria-label="Profile">
+                    <User className="h-5 w-5" />
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/register">Register</Link>
+                  </Button>
+                </>
+              )}
             </div>
             {/* Mobile menu toggle */}
             <Button
@@ -142,28 +167,41 @@ export function Header() {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-border py-4">
-            <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Button
-                  key={link.label}
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="justify-start"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <Link href={link.href}>{link.label}</Link>
-                </Button>
-              ))}
-              <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link href="/register">Register</Link>
-                </Button>
-              </div>
+          <div className="absolute top-16 left-0 w-full bg-background border-b border-border shadow-lg py-4 px-4 flex flex-col gap-4 z-40 lg:hidden">
+            <nav className="flex flex-col gap-2">
+              {navLinks.map((link) => {
+                const active = isActive(link.href);
+                return link.children ? (
+                  <div key={link.label} className="flex flex-col gap-2">
+                    <div className={`font-semibold text-sm px-2 ${active ? "text-primary" : ""}`}>
+                      {link.label}
+                    </div>
+                    <div className="flex flex-col pl-4 border-l-2 border-border ml-2 gap-2">
+                      {link.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          href={child.href}
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={`font-semibold text-sm px-2 py-1 rounded-md ${
+                      active ? "text-primary bg-primary/5" : "hover:text-primary"
+                    }`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         )}

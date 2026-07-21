@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
+import { PriceFilter } from "@/components/product/price-filter";
+import { DateFilter } from "@/components/product/date-filter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,36 +143,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {/* Price filter */}
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="font-semibold text-sm mb-3">Price Range</h3>
-            <form action="/products" method="get" className="space-y-3">
+            <form action="/products" method="get" className="space-y-4">
               {search && <input type="hidden" name="search" value={search} />}
               {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
               {sortBy !== "new_item" && <input type="hidden" name="sort_by" value={sortBy} />}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor="min_price" className="text-xs">Min</Label>
-                  <Input
-                    id="min_price"
-                    type="number"
-                    name="min_price"
-                    defaultValue={minPrice}
-                    placeholder="0"
-                    className="text-sm"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="max_price" className="text-xs">Max</Label>
-                  <Input
-                    id="max_price"
-                    type="number"
-                    name="max_price"
-                    defaultValue={maxPrice}
-                    placeholder="100"
-                    className="text-sm"
-                    step="0.01"
-                  />
-                </div>
-              </div>
+              
+              <PriceFilter initialMin={minPrice} initialMax={maxPrice} maxLimit={500} />
+              
               <Button type="submit" size="sm" variant="outline" className="w-full">
                 Apply Filter
               </Button>
@@ -209,58 +188,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {/* Date filter */}
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="font-semibold text-sm mb-3">Date Added</h3>
-            <ul className="space-y-1 text-sm">
-              <li>
-                <Link
-                  href={buildUrl({ search, sort_by: sortBy, category: sp.category, min_price: sp.min_price, max_price: sp.max_price })}
-                  className={`block px-2 py-1.5 rounded-md hover:bg-accent transition-colors flex items-center justify-between ${
-                    !dateRange ? "bg-accent font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  Any Date <Badge variant="outline">{totalAny}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={buildUrl({ search, sort_by: sortBy, category: sp.category, date_range: "365", min_price: sp.min_price, max_price: sp.max_price })}
-                  className={`block px-2 py-1.5 rounded-md hover:bg-accent transition-colors flex items-center justify-between ${
-                    dateRange === 365 ? "bg-accent font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  Last Year <Badge variant="outline">{totalLastYear}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={buildUrl({ search, sort_by: sortBy, category: sp.category, date_range: "30", min_price: sp.min_price, max_price: sp.max_price })}
-                  className={`block px-2 py-1.5 rounded-md hover:bg-accent transition-colors flex items-center justify-between ${
-                    dateRange === 30 ? "bg-accent font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  Last Month <Badge variant="outline">{totalLastMonth}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={buildUrl({ search, sort_by: sortBy, category: sp.category, date_range: "7", min_price: sp.min_price, max_price: sp.max_price })}
-                  className={`block px-2 py-1.5 rounded-md hover:bg-accent transition-colors flex items-center justify-between ${
-                    dateRange === 7 ? "bg-accent font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  Last Week <Badge variant="outline">{totalLastWeek}</Badge>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={buildUrl({ search, sort_by: sortBy, category: sp.category, date_range: "1", min_price: sp.min_price, max_price: sp.max_price })}
-                  className={`block px-2 py-1.5 rounded-md hover:bg-accent transition-colors flex items-center justify-between ${
-                    dateRange === 1 ? "bg-accent font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  Last Day <Badge variant="outline">{totalLastDay}</Badge>
-                </Link>
-              </li>
-            </ul>
+            <DateFilter 
+              counts={{
+                any: totalAny,
+                year: totalLastYear,
+                month: totalLastMonth,
+                week: totalLastWeek,
+                day: totalLastDay
+              }} 
+            />
           </div>
         </aside>
 

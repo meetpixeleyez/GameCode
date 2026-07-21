@@ -3,28 +3,10 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
-import {
-  LayoutDashboard,
-  Package,
-  Wallet,
-  Download,
-  Star,
-  Store,
-  ArrowRight,
-  RefreshCcw,
-} from "lucide-react";
+import { Store, ArrowRight, Star } from "lucide-react";
+import { SellerSidebarNav } from "./seller-sidebar-nav";
 
 export const dynamic = "force-dynamic";
-
-const navItems = [
-  { href: "/seller", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/seller/products", label: "My Products", icon: Package },
-  { href: "/seller/earnings", label: "Earnings", icon: Wallet },
-  { href: "/seller/withdrawals", label: "Withdrawals", icon: Download },
-  { href: "/seller/refunds", label: "Refunds", icon: RefreshCcw },
-  { href: "/seller/campaigns", label: "Campaigns", icon: Star },
-  { href: "/seller/reviews", label: "Reviews", icon: Star },
-];
 
 export default async function SellerLayout({
   children,
@@ -58,10 +40,10 @@ export default async function SellerLayout({
     redirect("/login");
   }
 
-  // Redirect to KYC if not verified
-  if (user.kv !== 1) {
-    redirect("/dashboard/kyc");
-  }
+  // Redirect to KYC if not verified is disabled for easier access
+  // if (user.kv !== 1) {
+  //   redirect("/dashboard/kyc");
+  // }
 
   // If not an author, show "become an author" prompt
   if (user.isAuthor !== 1) {
@@ -77,8 +59,8 @@ export default async function SellerLayout({
             the author application to start selling your game source codes.
           </p>
           <Button asChild>
-            <Link href="/seller/apply">
-              Apply to Become an Author
+            <Link href="/register?role=seller">
+              Register as an Author
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -134,34 +116,7 @@ export default async function SellerLayout({
             </div>
 
             {/* Nav */}
-            <nav className="rounded-lg border border-border bg-card p-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors"
-                  >
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-accent transition-colors"
-              >
-                <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                Buyer Dashboard
-              </Link>
-              <div className="pt-2 mt-2 border-t border-border">
-                <LogoutButton
-                  variant="ghost"
-                  className="w-full justify-start text-destructive hover:text-destructive"
-                />
-              </div>
-            </nav>
+            <SellerSidebarNav />
           </div>
         </aside>
 

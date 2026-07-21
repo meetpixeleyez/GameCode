@@ -164,3 +164,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    const { userId, sessionId } = await getCartContext();
+    const where = userId ? { userId } : { sessionId };
+    
+    await db.cart.deleteMany({ where });
+    
+    return NextResponse.json({ success: true, message: "Cart cleared" });
+  } catch (error) {
+    console.error("DELETE /api/cart error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

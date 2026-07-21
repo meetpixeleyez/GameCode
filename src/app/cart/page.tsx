@@ -125,6 +125,21 @@ export default function CartPage() {
     }
   }
 
+  async function clearCart() {
+    setUpdating("all");
+    try {
+      const res = await fetch(`/api/cart`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Clear failed");
+      toast({ title: "Cart cleared" });
+      await fetchCart();
+      router.refresh();
+    } catch {
+      toast({ title: "Clear failed", variant: "destructive" });
+    } finally {
+      setUpdating(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 flex items-center justify-center">
@@ -158,11 +173,23 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Shopping Cart</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {items.length} item{items.length === 1 ? "" : "s"} in your cart
-        </p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold">Shopping Cart</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {items.length} item{items.length === 1 ? "" : "s"} in your cart
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-destructive hover:bg-destructive/10 shrink-0"
+          onClick={clearCart}
+          disabled={updating !== null}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Clear Cart
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

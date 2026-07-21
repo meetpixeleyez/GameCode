@@ -21,6 +21,7 @@ const registerSchema = z
       .boolean()
       .refine((v) => v === true, "You must agree to the terms"),
     refBy: z.string().optional(),
+    role: z.enum(["buyer", "seller"]).optional().default("buyer"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstname, lastname, email, password, refBy } = parsed.data;
+    const { firstname, lastname, email, password, refBy, role } = parsed.data;
 
     // Check if email already exists
     const existing = await db.user.findUnique({ where: { email } });
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
         tv: 1,
         status: 1,
         profileComplete: 0, // user must complete profile on first login
+        isAuthor: role === "seller" ? 1 : 0,
       },
     });
 
