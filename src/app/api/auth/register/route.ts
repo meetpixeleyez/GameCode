@@ -20,6 +20,7 @@ const registerSchema = z
     agree: z
       .boolean()
       .refine((v) => v === true, "You must agree to the terms"),
+    refBy: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstname, lastname, email, password } = parsed.data;
+    const { firstname, lastname, email, password, refBy } = parsed.data;
 
     // Check if email already exists
     const existing = await db.user.findUnique({ where: { email } });
@@ -63,6 +64,12 @@ export async function POST(req: NextRequest) {
       suffix++;
     }
 
+    let referrerUserId: string | null = null;
+    if (refBy) {
+      const referrer = await db.user.findUnique({ where: { username: refBy } });
+      if (referrer) referrerUserId = referrer.id;
+    }
+
     const user = await db.user.create({
       data: {
         email,
@@ -71,6 +78,7 @@ export async function POST(req: NextRequest) {
         username,
         password: hashedPassword,
         passwordAlgo: "bcrypt-2b",
+        refBy: referrerUserId,
         // Match Laravel behavior: if email verification is OFF, auto-verify
         ev: 1,
         sv: 0,

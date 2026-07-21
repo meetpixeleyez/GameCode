@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -84,6 +84,7 @@ model User {
   authorLevels      AuthorLevel[]
   activities        Activity[] @relation("ActivityUser")
   orderItems        OrderItem[]
+  campaignProducts  CampaignProduct[]
 
   @@map("users")
 }
@@ -102,6 +103,17 @@ model Admin {
   updatedAt       DateTime @updatedAt
 
   @@map("admins")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@map("password_reset_tokens")
 }
 
 model Reviewer {
@@ -264,6 +276,7 @@ model Product {
   favoritedBy              ProductUser[]
   collections              ProductCollectionItem[]
   downloads                Download[]
+  campaignProducts         CampaignProduct[]
 
   @@index([userId])
   @@index([categoryId])
@@ -909,4 +922,36 @@ model Gateway {
   updatedAt           DateTime @updatedAt
 
   @@map("gateways")
+}
+
+model Campaign {
+  id              String   @id @default(cuid())
+  name            String
+  discountMin     Float
+  discountMax     Float
+  startDate       DateTime
+  endDate         DateTime
+  status          Int      @default(1) // 1=active, 0=disabled, 2=expired
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  campaignProducts CampaignProduct[]
+
+  @@map("campaigns")
+}
+
+model CampaignProduct {
+  id                 String   @id @default(cuid())
+  campaignId         String
+  campaign           Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discountPercentage Float
+  status             Int      @default(0) // 0=pending, 1=approved, 2=rejected, 3=expired
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("campaign_products")
 }

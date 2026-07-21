@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Star, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 interface ProductCardProps {
   product: {
@@ -20,12 +21,33 @@ interface ProductCardProps {
       firstname?: string | null;
       lastname?: string | null;
     };
+    campaignProducts?: {
+      discountPercentage: number;
+      campaign: { status: number; startDate: Date; endDate: Date };
+    }[];
   };
+  initialIsFavorited?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, initialIsFavorited = false }: ProductCardProps) {
   const authorName = product.user?.username || "Ready Game Code";
   const imageSrc = product.inlinePreviewImage || product.thumbnail || "/products/placeholder.svg";
+
+  // Check for active campaign discount
+  let activeDiscount = 0;
+  if (product.campaignProducts) {
+    const now = new Date();
+    const activeCampaign = product.campaignProducts.find(
+      cp => cp.campaign.status === 1 && new Date(cp.campaign.startDate) <= now && new Date(cp.campaign.endDate) >= now
+    );
+    if (activeCampaign) {
+      activeDiscount = activeCampaign.discountPercentage;
+    }
+  }
+
+  const discountedPrice = activeDiscount > 0 
+    ? product.price - (product.price * activeDiscount) / 100 
+    : product.price;
 
   return (
     <div className="group rounded-lg border border-border bg-card overflow-hidden hover:shadow-md transition-shadow">
@@ -48,6 +70,20 @@ export function ProductCard({ product }: ProductCardProps) {
             Live Preview
           </span>
         </Link>
+
+        {/* Favorite Button Overlay */}
+        <div className="absolute top-2 right-2 z-10 bg-background/80 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <FavoriteButton productId={product.id} initialIsFavorited={initialIsFavorited} size={16} />
+        </div>
+
+        {/* Sale Badge */}
+        {activeDiscount > 0 && (
+          <div className="absolute top-2 left-2 z-10">
+            <Badge className="bg-destructive hover:bg-destructive text-white border-none shadow-sm">
+              SALE {activeDiscount}% OFF
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -78,8 +114,15 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Price + Cart */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="font-bold text-lg text-primary">
-            ${product.price.toFixed(2)}
+          <div className="flex flex-col">
+            {activeDiscount > 0 && (
+              <span className="text-xs text-muted-foreground line-through">
+                ${product.price.toFixed(2)}
+              </span>
+            )}
+            <span className="font-bold text-lg text-primary">
+              ${discountedPrice.toFixed(2)}
+            </span>
           </div>
           <AddToCartButton
             productId={product.id}

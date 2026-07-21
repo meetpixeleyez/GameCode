@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { Suspense, useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
@@ -146,17 +146,22 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="remember"
-              checked={form.remember}
-              onCheckedChange={(checked) =>
-                setForm({ ...form, remember: checked === true })
-              }
-            />
-            <Label htmlFor="remember" className="text-sm cursor-pointer">
-              Remember Me
-            </Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={form.remember}
+                onCheckedChange={(checked) =>
+                  setForm({ ...form, remember: checked === true })
+                }
+              />
+              <Label htmlFor="remember" className="text-sm cursor-pointer">
+                Remember Me
+              </Label>
+            </div>
+            <Link href="/password-reset" className="text-sm text-primary hover:underline">
+              Forgot Password?
+            </Link>
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
@@ -179,5 +184,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, FormEvent, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
   const { toast } = useToast();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +26,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     agree: false,
+    refBy: ref || "",
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -258,5 +261,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center">Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

@@ -84,7 +84,7 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
   ]);
 
   const displayName =
-    `${author.firstname || ""} ${author.lastname || ""}`.trim() || author.username;
+    `${author.firstname || ""} ${author.lastname || ""}`.trim() || author.username || "Author";
   const initials = displayName.charAt(0).toUpperCase();
 
   return (

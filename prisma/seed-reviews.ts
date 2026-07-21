@@ -15,7 +15,7 @@ async function main() {
   }
 
   // Create a few buyer users for reviews
-  const reviewers = [];
+  const reviewers: any[] = [];
   const reviewUsers = [
     { firstname: "John", lastname: "Doe", email: "john.reviewer@test.com", username: "johnd", countryName: "United States", countryCode: "US" },
     { firstname: "Maria", lastname: "Garcia", email: "maria.reviewer@test.com", username: "mariag", countryName: "Spain", countryCode: "ES" },

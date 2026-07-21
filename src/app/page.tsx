@@ -55,41 +55,34 @@ export default async function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <Badge variant="secondary" className="px-3 py-1 text-xs">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Premium Source Codes Marketplace
+      <section className="relative overflow-hidden mesh-gradient">
+        {/* Decorative elements */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl" />
+
+        <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <Badge variant="outline" className="glass py-1.5 px-4 text-sm font-medium border-primary/20 text-primary">
+              <Sparkles className="w-4 h-4 mr-2" />
+              The Ultimate Marketplace for Game Developers
             </Badge>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-              Turn Your Game Dreams into Reality with{" "}
-              <span className="text-primary">Premium Source Codes!</span>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+              Turn Your Game Dreams Into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-400">Reality</span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Buy high-quality Unity, Android, and iOS game source codes at affordable
-              prices. Ready-to-publish game templates with AdMob integration, easy reskin
-              options, and full documentation.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Buy high-quality Unity, Android, and iOS game source codes at affordable prices. Ready-to-publish templates with full documentation.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Button size="lg" asChild>
-                <Link href="/#products">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <Button size="lg" asChild className="w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/25">
+                <Link href="#products">
                   Explore Products
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/register">Become a Seller</Link>
+              <Button size="lg" variant="outline" asChild className="w-full sm:w-auto h-12 px-8 text-base glass hover:bg-background/80">
+                <Link href="/seller/products/new">Become an Author</Link>
               </Button>
             </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto">
-            <StatCard icon={Package} value={`${totalProducts}+`} label="Game Codes" />
-            <StatCard icon={Users} value={`${totalAuthors}+`} label="Authors" />
-            <StatCard icon={TrendingUp} value="50+" label="Total Sales" />
-            <StatCard icon={ShieldCheck} value="100%" label="Verified" />
           </div>
         </div>
       </section>

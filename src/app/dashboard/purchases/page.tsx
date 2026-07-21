@@ -32,6 +32,7 @@ export default async function PurchasesPage({ searchParams }: PurchasesPageProps
           product: {
             include: { user: true },
           },
+          refundRequests: true,
         },
         orderBy: { createdAt: "desc" },
       },
@@ -167,12 +168,29 @@ export default async function PurchasesPage({ searchParams }: PurchasesPageProps
                         <div className="font-medium text-sm">
                           ${item.productPrice.toFixed(2)}
                         </div>
-                        <Button size="sm" variant="outline" className="mt-1" asChild>
-                          <Link href="/dashboard/downloads">
-                            <Download className="h-3.5 w-3.5 mr-1" />
-                            Download
-                          </Link>
-                        </Button>
+                        <div className="flex flex-col gap-2 mt-2">
+                          <Button size="sm" variant="outline" asChild>
+                            <Link href="/dashboard/downloads">
+                              <Download className="h-3.5 w-3.5 mr-1" />
+                              Download
+                            </Link>
+                          </Button>
+                          {item.isRefunded === 1 ? (
+                            <Badge variant="destructive" className="justify-center">Refunded</Badge>
+                          ) : item.refundRequests.length > 0 ? (
+                            <Button size="sm" variant="secondary" asChild>
+                              <Link href={`/dashboard/refunds/${item.refundRequests[0].id}`}>
+                                View Dispute
+                              </Link>
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" asChild>
+                              <Link href={`/dashboard/refunds/new?item=${item.id}`}>
+                                Request Refund
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

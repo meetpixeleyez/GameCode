@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getCartContext } from "@/lib/cart-session";
 import { z } from "zod";
+import Razorpay from "razorpay";
 
 const checkoutSchema = z.object({
   gateway: z.enum(["razorpay", "paypal", "manual_upi", "wallet"]),
 });
 
-// POST /api/checkout/process — creates order + deposit record, marks as paid (dev mock)
-// In production, this would redirect to gateway; for dev we mock payment success
+// POST /api/checkout/process — initializes Razorpay order
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -67,44 +66,89 @@ export async function POST(req: NextRequest) {
       return sum + item.price + item.buyerFee + item.extendedAmount + addonPrice;
     }, 0);
 
-    // Generate transaction IDs (matches Laravel getTrx format: 12-char uppercase alphanumeric)
+    // Generate transaction IDs
     const trx = generateTrx(12);
     const methodCode = gateway === "razorpay" ? 110 : gateway === "paypal" ? 101 : 1000;
     const methodCurrency = gateway === "razorpay" || gateway === "manual_upi" ? "INR" : "USD";
 
-    // Create order + order items in a transaction
+    if (gateway === "razorpay") {
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID || "dummy_key",
+        key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy_secret",
+      });
+
+      // Amount in paise
+      const amountInPaise = Math.round(amount * 100);
+      
+      const razorpayOrder = await razorpay.orders.create({
+        amount: amountInPaise,
+        currency: "INR",
+        receipt: trx,
+      });
+
+      // Create PENDING order and deposit
+      const pendingOrder = await db.$transaction(async (tx) => {
+        const order = await tx.order.create({
+          data: {
+            userId,
+            amount,
+            discount: 0,
+            trx,
+            paymentStatus: 0, // Pending
+          },
+        });
+
+        await tx.deposit.create({
+          data: {
+            userId,
+            orderId: order.id,
+            methodCode,
+            methodCurrency,
+            amount,
+            charge: 0,
+            rate: 1,
+            finalAmount: amount,
+            trx,
+            status: 0, // Pending
+            successUrl: "/checkout/thank-you",
+            failedUrl: "/checkout",
+            // We can store the razorpay order id in extra if needed, but receipt helps us map back
+          },
+        });
+        return order;
+      });
+
+      return NextResponse.json({
+        success: true,
+        provider: "razorpay",
+        razorpayOrderId: razorpayOrder.id,
+        amount: amountInPaise,
+        internalOrderId: pendingOrder.id,
+        trx: pendingOrder.trx,
+      });
+    }
+
+    // Default mock behavior for other gateways (Fallback)
     const order = await db.$transaction(async (tx) => {
-      // 1. Create order
       const newOrder = await tx.order.create({
         data: {
           userId,
           amount,
           discount: 0,
           trx,
-          paymentStatus: 1, // mark paid immediately (dev mock)
+          paymentStatus: 1, // Paid
         },
       });
 
-      // 2. Create order items with seller_earning calculation
       for (const item of cartItems) {
         const author = item.product.user;
-        const authorLevel = author?.authorLevels?.[0]; // highest tier (assumed sorted desc)
-
-        // Seller fee = authorLevel.fee (%) * price
+        const authorLevel = author?.authorLevels?.[0];
         const sellerFeePercent = authorLevel?.fee || 0;
         const sellerFee = (sellerFeePercent / 100) * item.price;
-
-        // Addon services amount
-        const addonAmount =
-          (item.reskinSelected ? item.product.reskinPrice : 0) +
+        const addonAmount = (item.reskinSelected ? item.product.reskinPrice : 0) +
           (item.publishSelected ? item.product.publishPrice : 0) +
           (item.storeOptimizationSelected ? item.product.storeOptimizationPrice : 0);
-
-        // Seller earning = (price - (seller_fee + discount)) + extended_amount + addon_amount
-        const sellerEarning =
-          (item.price - (sellerFee + item.discount)) + item.extendedAmount + addonAmount;
-
-        // Generate unique purchase code (matches Laravel format: userId-productId-random-timestamp)
+        const sellerEarning = (item.price - (sellerFee + item.discount)) + item.extendedAmount + addonAmount;
         const purchaseCode = `${userId.slice(-6)}-${item.productId.slice(-6)}-${generateTrx(6)}-${Date.now().toString(36)}`;
 
         await tx.orderItem.create({
@@ -128,13 +172,11 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Update product sales count
         await tx.product.update({
           where: { id: item.productId },
           data: { totalSold: { increment: 1 } },
         });
 
-        // Credit seller balance + update counters
         if (author) {
           await tx.user.update({
             where: { id: author.id },
@@ -144,8 +186,6 @@ export async function POST(req: NextRequest) {
               totalSoldAmount: { increment: sellerEarning - sellerFee },
             },
           });
-
-          // Create seller credit transaction
           await tx.transaction.create({
             data: {
               userId: author.id,
@@ -158,8 +198,6 @@ export async function POST(req: NextRequest) {
               remark: "new_sale",
             },
           });
-
-          // If seller fee > 0, create seller fee debit transaction
           if (sellerFee > 0) {
             await tx.transaction.create({
               data: {
@@ -177,7 +215,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 3. Create deposit record (for audit trail)
       await tx.deposit.create({
         data: {
           userId,
@@ -188,20 +225,19 @@ export async function POST(req: NextRequest) {
           charge: 0,
           rate: 1,
           finalAmount: amount,
-          trx: generateTrx(12),
-          status: 1, // PAID (dev mock)
+          trx,
+          status: 1,
           successUrl: "/checkout/thank-you",
           failedUrl: "/checkout",
         },
       });
 
-      // 4. Create buyer debit transaction
       await tx.transaction.create({
         data: {
           userId,
           amount,
           charge: 0,
-          postBalance: 0, // would be user.balance - amount in real flow
+          postBalance: 0,
           trxType: "-",
           trx,
           details: "Payment for Purchase Item",
@@ -209,7 +245,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 5. Clear cart
       await tx.cart.deleteMany({ where: { userId } });
 
       return newOrder;
@@ -217,6 +252,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      provider: "mock",
       orderTrx: order.trx,
       redirectUrl: `/checkout/thank-you?trx=${order.trx}`,
     });

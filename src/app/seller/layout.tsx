@@ -11,6 +11,7 @@ import {
   Star,
   Store,
   ArrowRight,
+  RefreshCcw,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ const navItems = [
   { href: "/seller/products", label: "My Products", icon: Package },
   { href: "/seller/earnings", label: "Earnings", icon: Wallet },
   { href: "/seller/withdrawals", label: "Withdrawals", icon: Download },
+  { href: "/seller/refunds", label: "Refunds", icon: RefreshCcw },
+  { href: "/seller/campaigns", label: "Campaigns", icon: Star },
   { href: "/seller/reviews", label: "Reviews", icon: Star },
 ];
 
@@ -47,11 +50,17 @@ export default async function SellerLayout({
       totalSoldAmount: true,
       avgRating: true,
       totalReview: true,
+      kv: true,
     },
   });
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Redirect to KYC if not verified
+  if (user.kv !== 1) {
+    redirect("/dashboard/kyc");
   }
 
   // If not an author, show "become an author" prompt

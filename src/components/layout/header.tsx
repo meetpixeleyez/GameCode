@@ -40,7 +40,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 glass transition-all duration-300">
       {/* Top contact bar */}
       <div className="hidden md:block bg-primary text-primary-foreground">
         <div className="container mx-auto flex items-center justify-between h-9 text-xs">

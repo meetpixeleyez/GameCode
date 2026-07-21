@@ -6,6 +6,8 @@ import { ProductCard } from "@/components/product/product-card";
 import { ProductPurchaseSidebar } from "@/components/product/product-purchase-sidebar";
 import { ReviewsSection } from "@/components/review/reviews-section";
 import { CommentsSection } from "@/components/review/comments-section";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -100,6 +102,16 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     });
   }
 
+  // Check if user has favorited
+  let isFavorited = false;
+  const session = await getCurrentUser();
+  if (session && session.sub) {
+    const fav = await db.productUser.findFirst({
+      where: { userId: session.sub, productId: product.id }
+    });
+    if (fav) isFavorited = true;
+  }
+
   // Get more items by the same author
   const moreByAuthor = await db.product.findMany({
     where: {
@@ -167,7 +179,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           {/* Title + actions row */}
           <div>
             <div className="flex items-start justify-between gap-4 flex-wrap">
-              <h1 className="text-2xl md:text-3xl font-bold flex-1">{product.title}</h1>
+              <div className="flex items-center gap-3 flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold">{product.title}</h1>
+                <FavoriteButton productId={product.id} initialIsFavorited={isFavorited} size={24} />
+              </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-primary text-primary" />

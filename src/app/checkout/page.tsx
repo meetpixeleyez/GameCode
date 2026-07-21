@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -97,17 +98,65 @@ export default function CheckoutPage() {
           description: json.error,
           variant: "destructive",
         });
+        setProcessing(false);
         return;
       }
-      toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
-      router.push(json.redirectUrl);
+      
+      if (json.provider === "razorpay") {
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: json.amount,
+          currency: "INR",
+          name: "ReadyGameCode",
+          description: "Purchase Digital Assets",
+          order_id: json.razorpayOrderId,
+          handler: async function (response: any) {
+            // Verify payment
+            try {
+              const verifyRes = await fetch("/api/checkout/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  internalOrderId: json.internalOrderId,
+                }),
+              });
+              const verifyJson = await verifyRes.json();
+              
+              if (!verifyRes.ok) throw new Error(verifyJson.error);
+              
+              toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
+              router.push(verifyJson.redirectUrl);
+            } catch (err: any) {
+              toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+              setProcessing(false);
+            }
+          },
+          prefill: {
+            name: user?.firstname ? `${user.firstname} ${user.lastname || ""}`.trim() : "Guest",
+            email: user?.email,
+          },
+          theme: { color: "#0f172a" },
+        };
+        
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on("payment.failed", function (response: any) {
+          toast({ title: "Payment failed", description: response.error.description, variant: "destructive" });
+          setProcessing(false);
+        });
+        rzp.open();
+      } else {
+        toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
+        router.push(json.redirectUrl);
+      }
     } catch {
       toast({
         title: "Network error",
         description: "Could not process payment. Try again.",
         variant: "destructive",
       });
-    } finally {
       setProcessing(false);
     }
   }
@@ -126,6 +175,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">Checkout</h1>
         <p className="text-sm text-muted-foreground mt-1">

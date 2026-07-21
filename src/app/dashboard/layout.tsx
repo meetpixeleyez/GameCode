@@ -3,7 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
-import { LayoutDashboard, Package, Download, User, Store } from "lucide-react";
+import { LayoutDashboard, Package, Download, User, Store, Heart, Folder, LifeBuoy, ShieldAlert, Wallet } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +11,11 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/purchases", label: "Purchases", icon: Package },
   { href: "/dashboard/downloads", label: "Downloads", icon: Download },
+  { href: "/dashboard/favorites", label: "Favorites", icon: Heart },
+  { href: "/dashboard/collections", label: "Collections", icon: Folder },
+  { href: "/dashboard/deposit", label: "Add Funds", icon: Wallet },
+  { href: "/dashboard/kyc", label: "Verification", icon: ShieldAlert },
+  { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
   { href: "/dashboard/profile", label: "Profile", icon: User },
 ];
 
