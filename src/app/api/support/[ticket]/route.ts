@@ -18,10 +18,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tick
         messages: {
           orderBy: { createdAt: "asc" },
         },
+        product: true,
       },
     });
 
-    if (!ticket || ticket.userId !== session.sub) {
+    if (!ticket || (ticket.userId !== session.sub && ticket.sellerId !== session.sub)) {
       return NextResponse.json({ error: "Ticket not found or unauthorized" }, { status: 404 });
     }
 
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tic
       where: { id: ticketId },
     });
 
-    if (!ticket || ticket.userId !== session.sub) {
+    if (!ticket || (ticket.userId !== session.sub && ticket.sellerId !== session.sub)) {
       return NextResponse.json({ error: "Ticket not found or unauthorized" }, { status: 404 });
     }
 
@@ -62,6 +63,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tic
         data: {
           supportTicketId: ticketId,
           message,
+          senderId: session.sub,
+          isAdmin: false,
         },
       });
 

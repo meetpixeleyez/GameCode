@@ -128,7 +128,7 @@ export default function CheckoutPage() {
               if (!verifyRes.ok) throw new Error(verifyJson.error);
               
               toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
-              router.push(verifyJson.redirectUrl);
+              window.location.href = verifyJson.redirectUrl;
             } catch (err: any) {
               toast({ title: "Verification failed", description: err.message, variant: "destructive" });
               setProcessing(false);
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
         rzp.open();
       } else {
         toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
-        router.push(json.redirectUrl);
+        window.location.href = json.redirectUrl;
       }
     } catch {
       toast({

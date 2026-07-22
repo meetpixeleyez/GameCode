@@ -7,6 +7,7 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
   	extend: {
@@ -56,7 +57,21 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+        keyframes: {
+          marquee: {
+            '0%': { transform: 'translateX(0)' },
+            '100%': { transform: 'translateX(-50%)' },
+          },
+          shine: {
+            '0%': { backgroundPosition: '-200% center' },
+            '100%': { backgroundPosition: '200% center' },
+          },
+        },
+        animation: {
+          marquee: 'marquee 20s linear infinite',
+          shine: 'shine 3s linear infinite',
+        }
   	}
   },
   plugins: [tailwindcssAnimate],

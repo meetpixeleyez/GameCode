@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { productId, license, reskinSelected, publishSelected, storeOptimizationSelected, isExtended } = parsed.data;
-    const { userId, sessionId } = await getCartContext();
+    const { userId, sessionId } = await getCartContext({ setCookieIfMissing: true });
 
     // Load product + category for price calculation
     const product = await db.product.findUnique({

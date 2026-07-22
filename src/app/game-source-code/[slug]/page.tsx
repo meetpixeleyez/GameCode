@@ -71,6 +71,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       changelogs: {
         orderBy: { createdAt: "desc" },
       },
+      _count: {
+        select: { comments: true },
+      },
     },
   });
 
@@ -215,7 +218,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="description">Description</TabsTrigger>
-              <TabsTrigger value="comments">Comments ({product.totalReview})</TabsTrigger>
+              <TabsTrigger value="comments">Comments ({product._count.comments})</TabsTrigger>
               <TabsTrigger value="changelog">Changelog</TabsTrigger>
             </TabsList>
 
@@ -319,7 +322,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </div>
 
         {/* Sidebar - 1/3 width */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           {/* Purchase card — interactive client component */}
           <ProductPurchaseSidebar
             product={{

@@ -20,7 +20,6 @@ export default function KYCPage() {
     fullName: "",
     documentType: "passport",
     documentUrl: "",
-    address: "",
   });
 
   useEffect(() => {
@@ -146,16 +145,6 @@ export default function KYCPage() {
                 placeholder="https://example.com/my-id.jpg"
               />
               <p className="text-xs text-muted-foreground">Please provide a direct link to a clear image of your document.</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Residential Address</Label>
-              <Textarea 
-                value={formData.address} 
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                placeholder="123 Main St, City, Country"
-                required
-              />
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Download, User, Store, Heart, Folder, LifeBuoy, ShieldAlert, Wallet } from "lucide-react";
+import { LayoutDashboard, Package, Download, User, Store, Heart, Folder, LifeBuoy, ShieldAlert, Wallet, History } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: "/dashboard/favorites", label: "Favorites", icon: Heart },
   { href: "/dashboard/collections", label: "Collections", icon: Folder },
   { href: "/dashboard/deposit", label: "Add Funds", icon: Wallet },
+  { href: "/dashboard/transactions", label: "Transactions", icon: History },
   { href: "/dashboard/kyc", label: "Verification", icon: ShieldAlert },
   { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
   { href: "/dashboard/profile", label: "Profile", icon: User },

@@ -29,10 +29,6 @@ model User {
   password          String   // bcrypt hash; $2y$ prefix tolerated for migration
   passwordAlgo      String   @default("bcrypt-2y") // migrated to "bcrypt-2b" on first NestJS login
   countryName       String?
-  city              String?
-  state             String?
-  zip               String?
-  address           String?
   balance           Float    @default(0)
   totalReview       Int      @default(0)
   avgRating         Float    @default(0)
@@ -72,7 +68,8 @@ model User {
   transactions      Transaction[]
   deposits          Deposit[]
   withdrawals       Withdrawal[]
-  supportTickets    SupportTicket[]
+  supportTickets    SupportTicket[] @relation("UserTickets")
+  sellerTickets     SupportTicket[] @relation("SellerTickets")
   followers         Follow[]      @relation("FollowerUser")
   following         Follow[]      @relation("FollowingUser")
   favoriteProducts  ProductUser[]
@@ -265,6 +262,7 @@ model Product {
   updatedAt                DateTime @updatedAt
 
   // Relations
+  supportTickets           SupportTicket[]
   reviews                  Review[]
   comments                 Comment[]
   activities               Activity[]
@@ -795,7 +793,12 @@ model AdminNotification {
 model SupportTicket {
   id          String   @id @default(cuid())
   userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
+  user        User?    @relation("UserTickets", fields: [userId], references: [id])
+  ticketType  String   @default("ADMIN") // "ADMIN" or "SELLER"
+  sellerId    String?
+  seller      User?    @relation("SellerTickets", fields: [sellerId], references: [id])
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
   name        String?
   email       String?
   ticket      String?  @unique // 8-digit random
@@ -816,6 +819,8 @@ model SupportMessage {
   supportTicketId String
   ticket          SupportTicket @relation(fields: [supportTicketId], references: [id], onDelete: Cascade)
   message         String?
+  senderId        String?
+  isAdmin         Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -14,29 +14,18 @@ import { usePathname } from "next/navigation";
 import { JwtPayload } from "@/lib/auth";
 import { SearchBar } from "@/components/SearchBar";
 
-const navLinks = [
+type NavLink = {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+};
+
+const navLinks: NavLink[] = [
   { label: "All Items", href: "/products" },
   { label: "About", href: "/about" },
-  { label: "Resources", href: "/blog" },
-  {
-    label: "Game",
-    href: "/products",
-    children: [
-      { label: "Puzzle", href: "/products?category=puzzle" },
-      { label: "Casual", href: "/products?category=casual" },
-      { label: "Platformer", href: "/products?category=platformer" },
-      { label: "Action", href: "/products?category=action" },
-      { label: "Racing", href: "/products?category=racing" },
-      { label: "Multiplayer", href: "/products?category=multiplayer" },
-    ],
-  },
-  {
-    label: "Services",
-    href: "/products",
-    children: [
-      { label: "Technical Support", href: "/products" },
-    ],
-  },
+  { label: "Resources", href: "/resources" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms & Conditions", href: "/terms-conditions" },
 ];
 
 export function Header({ session, cartCount = 0 }: { session: JwtPayload | null; cartCount?: number }) {
@@ -52,16 +41,38 @@ export function Header({ session, cartCount = 0 }: { session: JwtPayload | null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 glass transition-all duration-300">
-      {/* Top contact bar */}
-      <div className="hidden md:block bg-primary text-primary-foreground">
-        <div className="container mx-auto flex items-center justify-between h-9 text-xs">
-          <div className="flex items-center gap-4">
-            <Link href="/contact" className="hover:underline">Contact</Link>
-            <Link href="/blog" className="hover:underline">Blog</Link>
+      {/* Top marquee bar */}
+      <div className="w-full bg-[#111] text-white">
+        <div className="container mx-auto flex justify-between items-center py-1.5 px-4">
+          {/* Left side */}
+          <div className="hidden md:flex items-center gap-4 text-sm font-medium">
+            <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
+            <span className="text-muted-foreground">|</span>
+            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/contact" className="hover:underline">Hire us</Link>
+
+          {/* Center scroll */}
+          <div className="relative overflow-hidden flex-1 mx-4 text-center whitespace-nowrap hidden sm:block">
+            <div className="inline-block whitespace-nowrap animate-marquee">
+              <span className="inline-block pr-16 text-sm">
+                Latest News Here | Updates Coming Soon | Welcome to Our Website | Don’t Miss Out!
+              </span>
+              <span className="inline-block pr-16 text-sm">
+                Latest News Here | Updates Coming Soon | Welcome to Our Website | Don’t Miss Out!
+              </span>
+            </div>
           </div>
+
+          {/* Right side hire button */}
+          <Link
+            href="https://api.whatsapp.com/send?phone=919408212310&text=%F0%9F%91%8B%20Hey%20Ready%20Game%20Code,%20can%20you%20help%20me%20with"
+            target="_blank"
+            className="px-4 py-1 rounded-full border-2 border-white/20 bg-transparent text-white font-bold relative overflow-hidden transition-colors hover:border-white/40"
+          >
+            <span className="bg-gradient-to-r from-primary via-[#ffcc70] to-white bg-[length:200%_auto] text-transparent bg-clip-text animate-shine inline-block">
+              Hire us
+            </span>
+          </Link>
         </div>
       </div>
 

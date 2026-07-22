@@ -10,7 +10,12 @@ export async function GET(req: NextRequest) {
     }
 
     const tickets = await db.supportTicket.findMany({
-      where: { userId: session.sub },
+      where: { 
+        OR: [
+          { userId: session.sub },
+          { sellerId: session.sub }
+        ]
+      },
       orderBy: { updatedAt: "desc" },
     });
 
@@ -29,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { subject, priority, message } = body;
+    const { subject, priority, message, ticketType, productId, sellerId } = body;
 
     if (!subject || !message) {
       return NextResponse.json({ error: "Subject and message are required" }, { status: 400 });
@@ -51,6 +56,9 @@ export async function POST(req: NextRequest) {
           subject,
           priority: Number(priority) || 2,
           status: 0, // open
+          ticketType: ticketType || "ADMIN",
+          productId: ticketType === "SELLER" ? productId : null,
+          sellerId: ticketType === "SELLER" ? sellerId : null,
         },
       });
 
@@ -58,6 +66,8 @@ export async function POST(req: NextRequest) {
         data: {
           supportTicketId: newTicket.id,
           message,
+          senderId: session.sub,
+          isAdmin: false,
         },
       });
 

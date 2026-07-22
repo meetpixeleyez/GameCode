@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 import Razorpay from "razorpay";
+import { revalidatePath } from "next/cache";
 
 const checkoutSchema = z.object({
   gateway: z.enum(["razorpay", "paypal", "manual_upi", "wallet"]),
@@ -130,6 +131,21 @@ export async function POST(req: NextRequest) {
 
     // Default mock behavior for other gateways (Fallback)
     const order = await db.$transaction(async (tx) => {
+      let buyerPostBalance = 0;
+      const buyer = await tx.user.findUnique({ where: { id: userId } });
+      buyerPostBalance = buyer?.balance || 0;
+
+      if (gateway === "wallet") {
+        if (!buyer || buyer.balance < amount) {
+          throw new Error("Insufficient wallet balance");
+        }
+        const updatedBuyer = await tx.user.update({
+          where: { id: userId },
+          data: { balance: { decrement: amount } },
+        });
+        buyerPostBalance = updatedBuyer.balance;
+      }
+
       const newOrder = await tx.order.create({
         data: {
           userId,
@@ -237,10 +253,10 @@ export async function POST(req: NextRequest) {
           userId,
           amount,
           charge: 0,
-          postBalance: 0,
+          postBalance: buyerPostBalance,
           trxType: "-",
           trx,
-          details: "Payment for Purchase Item",
+          details: gateway === "wallet" ? "Payment via Wallet" : "Payment for Purchase Item",
           remark: "purchase",
         },
       });
@@ -250,14 +266,19 @@ export async function POST(req: NextRequest) {
       return newOrder;
     });
 
+    revalidatePath("/", "layout");
+
     return NextResponse.json({
       success: true,
       provider: "mock",
       orderTrx: order.trx,
       redirectUrl: `/checkout/thank-you?trx=${order.trx}`,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Checkout error:", error);
+    if (error.message === "Insufficient wallet balance") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

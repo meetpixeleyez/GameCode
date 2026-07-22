@@ -53,7 +53,7 @@ export function ProductPurchaseSidebar({ product }: ProductPurchaseProps) {
   const total = basePrice + extendedAmount + addonTotal;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6 sticky top-24">
+    <div className="rounded-lg border border-border bg-card p-6">
       <div className="space-y-4">
         {/* License picker */}
         <div>

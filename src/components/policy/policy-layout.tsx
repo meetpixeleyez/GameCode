@@ -1,7 +1,5 @@
 import { db } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
-
 // Loads a policy page from DB (Frontend table — Laravel-compatible) or returns null
 export async function getPolicyPage(slug: string) {
   const frontend = await db.frontend.findFirst({

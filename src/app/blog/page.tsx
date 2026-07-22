@@ -97,14 +97,14 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
+            {posts.map((post, index) => (
               <article
                 key={post.id}
                 className="group rounded-lg border border-border bg-card overflow-hidden hover:shadow-md transition-shadow"
               >
                 <Link href={`/blog/${post.slug}`} className="block">
                   {/* Cover */}
-                  <div className="aspect-[16/9] bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center">
+                  <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center">
                     {post.coverImage ? (
                       <Image
                         src={post.coverImage}
@@ -112,6 +112,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                         fill
                         sizes="(max-width: 768px) 100vw, 33vw"
                         className="object-cover"
+                        priority={index < 2}
                       />
                     ) : (
                       <Code2 className="h-10 w-10 text-primary/60" />

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import crypto from "crypto";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const verifySchema = z.object({
   razorpay_payment_id: z.string(),
@@ -195,16 +196,40 @@ export async function POST(req: NextRequest) {
         data: { status: 1 },
       });
 
-      // 4. Create buyer debit transaction
+      // 4. Update buyer balance and create transactions for external payment
+      // Concept: Deposit external funds into wallet, then immediately purchase.
+      const updatedBuyer = await tx.user.update({
+        where: { id: userId },
+        data: { balance: { increment: order.amount } }
+      });
+      
       await tx.transaction.create({
         data: {
           userId,
           amount: order.amount,
           charge: 0,
-          postBalance: 0,
+          postBalance: updatedBuyer.balance,
+          trxType: "+",
+          trx: order.trx,
+          details: "Funds added via Razorpay Checkout",
+          remark: "deposit",
+        },
+      });
+
+      const finalBuyer = await tx.user.update({
+        where: { id: userId },
+        data: { balance: { decrement: order.amount } }
+      });
+
+      await tx.transaction.create({
+        data: {
+          userId,
+          amount: order.amount,
+          charge: 0,
+          postBalance: finalBuyer.balance,
           trxType: "-",
           trx: order.trx,
-          details: "Payment for Purchase Item via Razorpay",
+          details: "Payment for Purchase Item",
           remark: "purchase",
         },
       });
@@ -212,6 +237,8 @@ export async function POST(req: NextRequest) {
       // 5. Clear cart
       await tx.cart.deleteMany({ where: { userId } });
     });
+
+    revalidatePath("/", "layout");
 
     return NextResponse.json({
       success: true,

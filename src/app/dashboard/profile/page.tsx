@@ -18,10 +18,6 @@ interface UserData {
   dialCode: string | null;
   mobile: string | null;
   countryName: string | null;
-  city: string | null;
-  state: string | null;
-  zip: string | null;
-  address: string | null;
 }
 
 export default function ProfilePage() {
@@ -182,58 +178,13 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Address */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Address Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Street Address</Label>
-              <Input
-                id="address"
-                value={form.address || ""}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={form.city || ""}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                <Input
-                  id="state"
-                  value={form.state || ""}
-                  onChange={(e) => setForm({ ...form, state: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">ZIP / Postal Code</Label>
-                <Input
-                  id="zip"
-                  value={form.zip || ""}
-                  onChange={(e) => setForm({ ...form, zip: e.target.value })}
-                />
-              </div>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="countryName">Country</Label>
               <Input
                 id="countryName"
                 value={form.countryName || ""}
                 onChange={(e) => setForm({ ...form, countryName: e.target.value })}
+                placeholder="E.g. India"
               />
             </div>
           </CardContent>

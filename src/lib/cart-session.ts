@@ -10,7 +10,7 @@ const GUEST_SESSION_COOKIE = "rgc_guest_session";
  * - If guest: returns { userId: null, sessionId } — sessionId is set as a cookie
  *   (10-year expiry so it persists across sessions)
  */
-export async function getCartContext(): Promise<{
+export async function getCartContext(options: { setCookieIfMissing?: boolean } = {}): Promise<{
   userId: string | null;
   sessionId: string | null;
 }> {
@@ -23,7 +23,7 @@ export async function getCartContext(): Promise<{
   const cookieStore = await cookies();
   let sessionId = cookieStore.get(GUEST_SESSION_COOKIE)?.value;
 
-  if (!sessionId) {
+  if (!sessionId && options.setCookieIfMissing) {
     sessionId = randomUUID();
     cookieStore.set(GUEST_SESSION_COOKIE, sessionId, {
       httpOnly: true,
@@ -34,7 +34,7 @@ export async function getCartContext(): Promise<{
     });
   }
 
-  return { userId: null, sessionId };
+  return { userId: null, sessionId: sessionId || null };
 }
 
 /**
