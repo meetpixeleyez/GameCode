@@ -14,6 +14,11 @@ const createProductSchema = z.object({
     .url("Valid preview video URL required")
     .optional()
     .or(z.literal("")),
+  thumbnail: z
+    .string()
+    .url("Valid thumbnail URL required")
+    .optional()
+    .or(z.literal("")),
   tags: z.array(z.string()).optional(),
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().optional(),
@@ -118,6 +123,7 @@ export async function POST(req: NextRequest) {
         storeOptimizationPrice: parsed.data.storeOptimizationPrice,
         demoUrl: parsed.data.demoUrl,
         previewVideo: parsed.data.previewVideo || null,
+        thumbnail: parsed.data.thumbnail || null,
         tags: parsed.data.tags ? JSON.stringify(parsed.data.tags) : null,
         metaTitle: parsed.data.metaTitle || null,
         metaDescription: parsed.data.metaDescription || null,

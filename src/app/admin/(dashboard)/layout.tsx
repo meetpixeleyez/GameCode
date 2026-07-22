@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { MobileNavSelect } from "./mobile-nav";
 import {
   LayoutDashboard,
   Users,
@@ -99,19 +100,7 @@ export default async function AdminLayout({
              <ShieldCheck className="h-5 w-5 text-primary" />
              <span className="font-medium">Admin Panel</span>
            </div>
-           <select 
-             className="bg-transparent border-none text-sm font-medium outline-none"
-             onChange={(e) => {
-               if(e.target.value) {
-                 window.location.href = e.target.value;
-               }
-             }}
-           >
-             <option value="">Navigation...</option>
-             {navItems.map((item) => (
-                <option key={item.href} value={item.href}>{item.label}</option>
-             ))}
-           </select>
+           <MobileNavSelect navItems={navItems.map(item => ({ href: item.href, label: item.label }))} />
         </div>
 
         {/* Main content */}

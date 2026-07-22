@@ -23,6 +23,7 @@ export default function NewProductPage() {
     priceCl: "",
     demoUrl: "",
     previewVideo: "",
+    thumbnail: "",
     tags: "",
     metaTitle: "",
     metaDescription: "",
@@ -126,10 +127,10 @@ export default function NewProductPage() {
                 rows={8}
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="<p>Describe your game, features, gameplay mechanics, and what makes it special...</p>"
+                placeholder="Describe your game, features, gameplay mechanics, and what makes it special..."
               />
               <p className="text-xs text-muted-foreground">
-                HTML allowed. Describe features, gameplay, and what buyers get.
+                Enter normal text. You may also use basic HTML if you prefer.
               </p>
             </div>
 
@@ -264,10 +265,25 @@ export default function NewProductPage() {
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="thumbnail">Thumbnail Image URL *</Label>
+              <Input
+                id="thumbnail"
+                type="url"
+                required
+                value={form.thumbnail}
+                onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
+                placeholder="https://example.com/thumbnail.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                This image will be displayed on the game cards.
+              </p>
+            </div>
+
             <div className="p-3 rounded-md bg-accent/50 text-xs text-muted-foreground flex items-start gap-2">
               <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <div>
-                <strong className="text-foreground">Note:</strong> Thumbnail, preview
+                <strong className="text-foreground">Note:</strong> Preview
                 image, screenshots, and main file upload will be available after the
                 initial product creation. The reviewer will request these during the
                 review process.
