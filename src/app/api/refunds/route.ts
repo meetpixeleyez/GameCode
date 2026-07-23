@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import { broadcastNotification } from "@/lib/sse";
 
 const newRefundSchema = z.object({
   orderItemId: z.string(),
@@ -44,6 +45,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Refund already requested for this item." }, { status: 400 });
     }
 
+    let totalRefundAmount = orderItem.productPrice;
+    if (orderItem.isExtended === 1) {
+      totalRefundAmount += orderItem.extendedAmount;
+    }
+    if (orderItem.reskinSelected === 1) {
+      totalRefundAmount += orderItem.product.reskinPrice;
+    }
+    if (orderItem.publishSelected === 1) {
+      totalRefundAmount += orderItem.product.publishPrice;
+    }
+    if (orderItem.storeOptimizationSelected === 1) {
+      totalRefundAmount += orderItem.product.storeOptimizationPrice;
+    }
+
     // Create the refund request and the first activity message
     const refundRequest = await db.$transaction(async (tx) => {
       const rr = await tx.refundRequest.create({
@@ -53,7 +68,8 @@ export async function POST(req: NextRequest) {
           status: 0, // Pending
           userId: orderItem.product.userId, // Seller
           buyerId: user.sub,
-          amount: orderItem.productPrice,
+          amount: totalRefundAmount,
+          sellerUnreadCount: 1, // New request means 1 unread message for seller
         },
       });
 
@@ -67,6 +83,9 @@ export async function POST(req: NextRequest) {
 
       return rr;
     });
+
+    // Notify seller via SSE
+    broadcastNotification(orderItem.product.userId);
 
     return NextResponse.json({ success: true, refundRequestId: refundRequest.id });
   } catch (error) {

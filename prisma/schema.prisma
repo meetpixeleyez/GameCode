@@ -532,6 +532,8 @@ model RefundRequest {
   userId      String?  // seller
   buyerId     String?  // buyer
   amount      Float    @default(0)
+  sellerUnreadCount Int @default(0)
+  buyerUnreadCount  Int @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -806,6 +808,9 @@ model SupportTicket {
   status      Int      @default(0) // 0=open, 1=answered, 2=replied, 3=closed
   priority    Int      @default(2) // 1=low, 2=medium, 3=high
   lastReply   DateTime?
+  sellerUnreadCount Int @default(0)
+  buyerUnreadCount  Int @default(0)
+  adminUnreadCount  Int @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

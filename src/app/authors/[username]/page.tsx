@@ -63,7 +63,6 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
       totalFollower: true,
       totalFollowing: true,
       countryName: true,
-      city: true,
       createdAt: true,
     },
   });

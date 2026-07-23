@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { broadcastNotification } from "@/lib/sse";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,15 @@ export default async function RefundDisputePage({ params }: { params: Promise<{ 
   });
 
   if (!refund) notFound();
+
+  // Mark as read for buyer
+  if (refund.buyerUnreadCount > 0) {
+    await db.refundRequest.update({
+      where: { id },
+      data: { buyerUnreadCount: 0 },
+    });
+    broadcastNotification(session.sub);
+  }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto mt-10">

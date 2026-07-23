@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import { broadcastNotification } from "@/lib/sse";
 
 const replySchema = z.object({
   message: z.string().min(1, "Message cannot be empty"),
@@ -43,14 +44,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    await db.refundActivity.create({
-      data: {
-        refundRequestId: refund.id,
-        message,
-        buyerId: isBuyer ? user.sub : null,
-        sellerId: isSeller ? user.sub : null,
-      },
+    await db.$transaction(async (tx) => {
+      await tx.refundActivity.create({
+        data: {
+          refundRequestId: refund.id,
+          message,
+          buyerId: isBuyer ? user.sub : null,
+          sellerId: isSeller ? user.sub : null,
+        },
+      });
+
+      await tx.refundRequest.update({
+        where: { id: refund.id },
+        data: {
+          sellerUnreadCount: isBuyer ? { increment: 1 } : undefined,
+          buyerUnreadCount: isSeller ? { increment: 1 } : undefined,
+        },
+      });
     });
+
+    // Notify the other party via SSE
+    const recipientId = isBuyer ? refund.userId : refund.buyerId;
+    if (recipientId) {
+      broadcastNotification(recipientId);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -11,6 +11,8 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { useNotifications } from "@/hooks/use-notifications";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { href: "/seller", label: "Seller Dashboard", icon: LayoutDashboard, exact: true },
@@ -24,6 +26,7 @@ const navItems = [
 
 export function SellerSidebarNav() {
   const pathname = usePathname();
+  const { seller } = useNotifications();
 
   return (
     <nav className="rounded-lg border border-border bg-card p-2">
@@ -34,14 +37,21 @@ export function SellerSidebarNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+            className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
               isActive 
                 ? "bg-primary text-primary-foreground font-medium shadow-sm" 
                 : "hover:bg-accent text-foreground"
             }`}
           >
-            <Icon className={`h-4 w-4 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
-            {item.label}
+            <div className="flex items-center gap-3">
+              <Icon className={`h-4 w-4 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+              {item.label}
+            </div>
+            {item.label === "Refunds" && seller.refunds > 0 && (
+              <Badge variant={isActive ? "secondary" : "destructive"} className="px-1.5 py-0 min-w-5 h-5 flex items-center justify-center text-[10px]">
+                {seller.refunds}
+              </Badge>
+            )}
           </Link>
         );
       })}

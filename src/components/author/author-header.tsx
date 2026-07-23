@@ -29,7 +29,6 @@ interface AuthorHeaderProps {
     totalReview: number;
     avgRating: number;
     totalFollower: number;
-    city: string | null;
     countryName: string | null;
     createdAt: Date;
   };
@@ -109,10 +108,8 @@ export function AuthorHeader({
           </div>
           <p className="text-sm text-muted-foreground mt-1">@{author.username}</p>
 
-          {(author.city || author.countryName) && (
+          {author.countryName && (
             <p className="text-sm text-muted-foreground mt-2">
-              {author.city}
-              {author.city && author.countryName ? ", " : ""}
               {author.countryName}
             </p>
           )}

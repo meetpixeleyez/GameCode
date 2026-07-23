@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         status: 0, // OPEN
         priority: 2, // MEDIUM
         lastReply: new Date(),
+        adminUnreadCount: 1,
       },
     });
 
