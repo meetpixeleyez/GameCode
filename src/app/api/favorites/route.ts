@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
     if (!session || !session.sub) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (session.role === "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const userId = session.sub;
 
     const favorites = await db.productUser.findMany({
@@ -32,6 +35,9 @@ export async function POST(req: NextRequest) {
     
     if (!session || !session.sub) {
       return NextResponse.json({ error: "Unauthorized. Please log in to favorite items." }, { status: 401 });
+    }
+    if (session.role === "admin") {
+      return NextResponse.json({ error: "Forbidden: Admins cannot favorite items." }, { status: 403 });
     }
     const userId = session.sub;
 

@@ -108,7 +108,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   // Check if user has favorited
   let isFavorited = false;
   const session = await getCurrentUser();
-  if (session && session.sub) {
+  const isAdmin = session?.role === "admin";
+  if (session && session.sub && !isAdmin) {
     const fav = await db.productUser.findFirst({
       where: { userId: session.sub, productId: product.id }
     });
@@ -184,7 +185,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3 flex-1">
                 <h1 className="text-2xl md:text-3xl font-bold">{product.title}</h1>
-                <FavoriteButton productId={product.id} initialIsFavorited={isFavorited} size={24} />
+                {!isAdmin && (
+                  <FavoriteButton productId={product.id} initialIsFavorited={isFavorited} size={24} />
+                )}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
@@ -325,6 +328,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           {/* Purchase card — interactive client component */}
           <ProductPurchaseSidebar
+            isAdmin={session?.role === "admin"}
             product={{
               id: product.id,
               title: product.title,

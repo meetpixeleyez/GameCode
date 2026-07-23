@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 
 interface ProductPurchaseProps {
+  isAdmin?: boolean;
   product: {
     id: string;
     title: string;
@@ -36,7 +37,7 @@ interface ProductPurchaseProps {
   };
 }
 
-export function ProductPurchaseSidebar({ product }: ProductPurchaseProps) {
+export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurchaseProps) {
   const [license, setLicense] = useState<"1" | "2">("1");
   const [isExtended, setIsExtended] = useState(false);
   const [reskin, setReskin] = useState(false);
@@ -183,38 +184,48 @@ export function ProductPurchaseSidebar({ product }: ProductPurchaseProps) {
           <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
         </div>
 
-        <Button
-          className="w-full"
-          size="lg"
-          disabled={loading}
-          onClick={() =>
-            addToCart({
-              productId: product.id,
-              license,
-              isExtended,
-              reskinSelected: reskin,
-              publishSelected: publish,
-              storeOptimizationSelected: storeOpt,
-            })
-          }
-        >
-          {loading ? (
-            <>
-              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              Adding...
-            </>
-          ) : added ? (
-            <>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Added! View Cart
-            </>
-          ) : (
-            <>
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
-            </>
-          )}
-        </Button>
+        {isAdmin ? (
+          <Button
+            className="w-full bg-muted text-muted-foreground hover:bg-muted"
+            size="lg"
+            disabled
+          >
+            Admins cannot purchase
+          </Button>
+        ) : (
+          <Button
+            className="w-full"
+            size="lg"
+            disabled={loading}
+            onClick={() =>
+              addToCart({
+                productId: product.id,
+                license,
+                isExtended,
+                reskinSelected: reskin,
+                publishSelected: publish,
+                storeOptimizationSelected: storeOpt,
+              })
+            }
+          >
+            {loading ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Adding...
+              </>
+            ) : added ? (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Added! View Cart
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Cart
+              </>
+            )}
+          </Button>
+        )}
 
         <Button variant="outline" className="w-full" size="lg" asChild>
           <a

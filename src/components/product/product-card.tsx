@@ -4,6 +4,7 @@ import { Star, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { getCurrentUser } from "@/lib/auth";
 
 interface ProductCardProps {
   product: {
@@ -29,7 +30,9 @@ interface ProductCardProps {
   initialIsFavorited?: boolean;
 }
 
-export function ProductCard({ product, initialIsFavorited = false }: ProductCardProps) {
+export async function ProductCard({ product, initialIsFavorited = false }: ProductCardProps) {
+  const session = await getCurrentUser();
+  const isAdmin = session?.role === "admin";
   const authorName = product.user?.username || "Ready Game Code";
   const imageSrc = product.inlinePreviewImage || product.thumbnail || "/products/placeholder.svg";
 
@@ -72,9 +75,11 @@ export function ProductCard({ product, initialIsFavorited = false }: ProductCard
         </Link>
 
         {/* Favorite Button Overlay */}
-        <div className="absolute top-2 right-2 z-10 bg-background/80 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <FavoriteButton productId={product.id} initialIsFavorited={initialIsFavorited} size={16} />
-        </div>
+        {!isAdmin && (
+          <div className="absolute top-2 right-2 z-10 bg-background/80 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <FavoriteButton productId={product.id} initialIsFavorited={initialIsFavorited} size={16} />
+          </div>
+        )}
 
         {/* Sale Badge */}
         {activeDiscount > 0 && (
@@ -124,12 +129,14 @@ export function ProductCard({ product, initialIsFavorited = false }: ProductCard
               ${discountedPrice.toFixed(2)}
             </span>
           </div>
-          <AddToCartButton
-            productId={product.id}
-            variant="outline"
-            size="sm"
-            label="Add"
-          />
+          {!isAdmin && (
+            <AddToCartButton
+              productId={product.id}
+              variant="outline"
+              size="sm"
+              label="Add"
+            />
+          )}
         </div>
       </div>
     </div>

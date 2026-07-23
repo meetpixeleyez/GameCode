@@ -137,21 +137,30 @@ export function Header({ session, cartCount = 0 }: { session: JwtPayload | null;
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart" aria-label="Cart">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                  {cartCount}
-                </span>
-              </Link>
-            </Button>
+            {session?.role !== "admin" && (
+              <Button variant="ghost" size="icon" asChild className="relative">
+                <Link href="/cart" aria-label="Cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                    {cartCount}
+                  </span>
+                </Link>
+              </Button>
+            )}
             <div className="hidden sm:flex items-center gap-2">
               {session ? (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href="/dashboard/profile" aria-label="Profile">
-                    <User className="h-5 w-5" />
-                  </Link>
-                </Button>
+                <>
+                  {session.role === "admin" && (
+                    <Button variant="outline" size="sm" asChild className="mr-2">
+                      <Link href="/admin">Admin Panel</Link>
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={session.role === "admin" ? "/admin" : "/dashboard/profile"} aria-label="Profile">
+                      <User className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button variant="ghost" size="sm" asChild>
