@@ -78,14 +78,7 @@ export async function POST(req: NextRequest) {
         lastname,
         username,
         password: hashedPassword,
-        passwordAlgo: "bcrypt-2b",
         refBy: referrerUserId,
-        // Match Laravel behavior: if email verification is OFF, auto-verify
-        ev: 1,
-        sv: 0,
-        kv: 0,
-        ts: 0,
-        tv: 1,
         status: 1,
         profileComplete: 0, // user must complete profile on first login
         isAuthor: role === "seller" ? 1 : 0,

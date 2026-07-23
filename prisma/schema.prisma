@@ -27,7 +27,6 @@ model User {
   mobile            String?
   refBy             String?  // referrer user id (0 = no referrer)
   password          String   // bcrypt hash; $2y$ prefix tolerated for migration
-  passwordAlgo      String   @default("bcrypt-2y") // migrated to "bcrypt-2b" on first NestJS login
   countryName       String?
   balance           Float    @default(0)
   totalReview       Int      @default(0)
@@ -39,15 +38,9 @@ model User {
   status            Int      @default(1) // 0=banned, 1=active
   kycData           String?  // JSON
   kycRejectionReason String?
-  kv                Int      @default(0) // 0=unverified, 1=verified, 2=pending
-  ev                Int      @default(0) // email verified
-  sv                Int      @default(0) // mobile verified
   profileComplete   Int      @default(0)
   verCode           String?
   verCodeSendAt     DateTime?
-  ts                Int      @default(0) // 2FA on/off
-  tv                Int      @default(1) // 2FA verified this session
-  tsc               String?  // 2FA secret (TOTP)
   isAuthor          Int      @default(0)
   isAuthorFeatured  Int      @default(0)
   authorInfo        String?  // JSON (form data)
@@ -694,33 +687,6 @@ model BlogCategory {
   @@map("blog_categories")
 }
 
-model Page {
-  id          String   @id @default(cuid())
-  name        String?
-  slug        String?  @unique
-  tempname    String?  @default("basic")
-  secs        String?  // JSON (page builder sections)
-  seoContent  String?  // JSON
-  isDefault   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("pages")
-}
-
-model Frontend {
-  id          String   @id @default(cuid())
-  dataKeys    String
-  dataValues  String?  // JSON
-  tempname    String?  @default("basic")
-  slug        String?
-  seoContent  String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("frontends")
-}
-
 model Subscriber {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -848,61 +814,6 @@ model SupportAttachment {
 // SETTINGS & SYSTEM
 // =============================================================================
 
-model SiteSetting {
-  id                    String   @id @default(cuid())
-  siteName              String?
-  curText               String?  @default("USD")
-  curSym                String?  @default("$")
-  emailFrom             String?
-  emailFromName         String?
-  emailTemplate         String? 
-  smsTemplate           String?
-  smsFrom               String?
-  pushTitle             String?
-  pushTemplate          String?
-  baseColor             String?  @default("#FF7C31")
-  secondaryColor        String?
-  mailConfig            String?  // JSON
-  smsConfig             String?  // JSON
-  firebaseConfig        String?  // JSON
-  globalShortcodes      String?  // JSON
-  socialiteCredentials  String?  // JSON
-  kv                    Int      @default(0) // KYC
-  ev                    Int      @default(0) // email verification
-  en                    Int      @default(0) // email notifications
-  sv                    Int      @default(0) // mobile verification
-  sn                    Int      @default(0) // SMS notifications
-  pn                    Int      @default(1) // push notifications
-  forceSsl              Int      @default(0)
-  maintenanceMode       Int      @default(0)
-  securePassword        Int      @default(0)
-  agree                 Int      @default(0)
-  multiLanguage         Int      @default(1)
-  registration          Int      @default(1)
-  activeTemplate        String?  @default("basic")
-  paginateNumber        Int      @default(20)
-  currencyFormat        Int      @default(3) // 1=both, 2=text, 3=symbol
-  fileServer            Int      @default(1) // 1=local, 2=ftp, 3=wasabi, 4=digital_ocean
-  ftp                   String?  // JSON
-  wasabi                String?  // JSON
-  digitalOcean          String?  // JSON
-  backblaze             String?  // JSON
-  referralFixed         Float    @default(0)
-  referralPercentage    Float    @default(0)
-  referral              Int      @default(0)
-  changelog             Int      @default(1)
-  freeItem              Int      @default(0)
-  minReviews            Int      @default(0)
-  trendingCount         Int      @default(100)
-  advertisement         Int      @default(1)
-  commentDisable        Int      @default(0)
-  previewVideoSize      Int      @default(100)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  @@map("general_settings")
-}
-
 model ApiKey {
   id        String   @id @default(cuid())
   userId    String
@@ -913,25 +824,6 @@ model ApiKey {
   updatedAt DateTime @updatedAt
 
   @@map("api_keys")
-}
-
-model Gateway {
-  id                  String   @id @default(cuid())
-  formId              String?
-  code                Int?
-  name                String?
-  alias               String   @default("NULL")
-  image               String?
-  status              Int      @default(1) // 1=enabled, 2=disabled
-  gatewayParameters   String?  // JSON (credentials)
-  supportedCurrencies String?  // JSON
-  crypto              Int      @default(0)
-  extra               String?  // JSON
-  description         String? 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  @@map("gateways")
 }
 
 model Campaign {
@@ -964,4 +856,14 @@ model CampaignProduct {
   updatedAt          DateTime @updatedAt
 
   @@map("campaign_products")
+}
+
+model Policy {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("policies")
 }

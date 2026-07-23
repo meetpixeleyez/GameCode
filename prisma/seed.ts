@@ -4,48 +4,6 @@ import bcrypt from "bcryptjs";
 async function main() {
   console.log("🌱 Seeding Ready Game Code database...");
 
-  // 1. Site settings (singleton)
-  await db.siteSetting.upsert({
-    where: { id: "singleton" },
-    update: {},
-    create: {
-      id: "singleton",
-      siteName: "Ready Game Code",
-      curText: "USD",
-      curSym: "$",
-      emailFrom: "support@readygamecode.com",
-      emailFromName: "Ready Game Code",
-      baseColor: "#FF7C31",
-      secondaryColor: "#0F172A",
-      paginateNumber: 12,
-      currencyFormat: 3,
-      activeTemplate: "basic",
-      kv: 0,
-      ev: 0,
-      en: 1,
-      sv: 0,
-      sn: 1,
-      pn: 1,
-      multiLanguage: 1,
-      registration: 1,
-      changelog: 1,
-      freeItem: 0,
-      minReviews: 1,
-      trendingCount: 100,
-      advertisement: 1,
-      commentDisable: 0,
-      previewVideoSize: 100,
-      referral: 0,
-      referralFixed: 0,
-      referralPercentage: 0,
-      fileServer: 1,
-      forceSsl: 1,
-      maintenanceMode: 0,
-      securePassword: 0,
-      agree: 1,
-    },
-  });
-  console.log("✓ Site settings seeded");
 
   // 2. Categories
   const gameCategory = await db.category.upsert({
@@ -148,16 +106,10 @@ async function main() {
       lastname: "Game Code",
       username: "readygamecode",
       password: sellerPassword,
-      passwordAlgo: "bcrypt-2b",
       balance: 1926.0,
       totalSold: 50,
       totalSoldAmount: 1926.0,
       status: 1,
-      ev: 1,
-      sv: 0,
-      kv: 0,
-      ts: 0,
-      tv: 1,
       profileComplete: 1,
       isAuthor: 1,
     },
@@ -555,44 +507,6 @@ async function main() {
   }
   console.log(`✓ ${blogPosts.length} blog posts seeded`);
 
-  // 9. Pages (About, Privacy, Terms, Refund, Cookie)
-  const pages = [
-    {
-      name: "About Us",
-      slug: "about",
-      secs: JSON.stringify({
-        title: "Engineering the Future of Game Development",
-        body: "Ready Game Code is a marketplace for premium Unity game source codes, built by developers for developers.",
-      }),
-    },
-    {
-      name: "Privacy Policy",
-      slug: "privacy-policy",
-      secs: JSON.stringify({ body: "Privacy policy content..." }),
-    },
-    {
-      name: "Terms & Conditions",
-      slug: "terms-conditions",
-      secs: JSON.stringify({ body: "Terms and conditions content..." }),
-    },
-    {
-      name: "Refund Policy",
-      slug: "refund-policy",
-      secs: JSON.stringify({ body: "Refund policy content..." }),
-    },
-  ];
-  for (const pg of pages) {
-    await db.page.upsert({
-      where: { slug: pg.slug },
-      update: {},
-      create: {
-        ...pg,
-        tempname: "basic",
-        isDefault: 0,
-      },
-    });
-  }
-  console.log(`✓ ${pages.length} static pages seeded`);
 
   console.log("\n✅ Seed complete!");
   console.log("   Admin:    admin@readygamecode.com / admin123");

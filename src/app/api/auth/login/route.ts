@@ -54,17 +54,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Migration: rehash password with $2b$ on first NestJS login (if still $2y$)
     let updatedData: any = { lastLoginAt: new Date() };
-    if (user.passwordAlgo === "bcrypt-2y") {
-      const newHash = await bcrypt.hash(password, 12);
-      updatedData = {
-        ...updatedData,
-        password: newHash,
-        passwordAlgo: "bcrypt-2b",
-      };
-    }
-
     await db.user.update({
       where: { id: user.id },
       data: updatedData,

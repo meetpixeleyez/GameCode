@@ -32,7 +32,6 @@ export default async function SellerLayout({
       totalSoldAmount: true,
       avgRating: true,
       totalReview: true,
-      kv: true,
     },
   });
 

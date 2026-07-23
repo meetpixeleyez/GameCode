@@ -1,41 +1,5 @@
 import { db } from "@/lib/db";
 
-// Loads a policy page from DB (Frontend table — Laravel-compatible) or returns null
-export async function getPolicyPage(slug: string) {
-  const frontend = await db.frontend.findFirst({
-    where: {
-      slug,
-      dataKeys: "policy_pages.element",
-    },
-  });
-
-  if (frontend) {
-    try {
-      const values = JSON.parse(frontend.dataValues || "{}");
-      return {
-        title: values.title || slug,
-        body: values.body || "",
-      };
-    } catch {
-      // fall through
-    }
-  }
-
-  const page = await db.page.findUnique({ where: { slug } });
-  if (page) {
-    try {
-      const secs = JSON.parse(page.secs || "{}");
-      return {
-        title: page.name || slug,
-        body: secs.body || "",
-      };
-    } catch {
-      // fall through
-    }
-  }
-
-  return null;
-}
 
 export function PolicyLayout({
   title,

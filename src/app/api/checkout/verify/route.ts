@@ -61,8 +61,7 @@ export async function POST(req: NextRequest) {
     const buyer = await db.user.findUnique({ where: { id: userId } });
     if (!buyer) return NextResponse.json({ error: "Buyer not found" }, { status: 400 });
 
-    const gs = await db.siteSetting.findFirst();
-    const isReferralActive = gs?.referral === 1 && buyer.refBy;
+    const isReferralActive = false; // Referral feature disabled (SiteSetting removed)
 
     // Load cart items
     const cartItems = await db.cart.findMany({
@@ -72,6 +71,9 @@ export async function POST(req: NextRequest) {
           include: {
             user: { include: { authorLevels: true } },
             category: true,
+            campaignProducts: {
+              include: { campaign: true }
+            }
           },
         },
       },
@@ -97,7 +99,18 @@ export async function POST(req: NextRequest) {
         const addonAmount = (item.reskinSelected ? item.product.reskinPrice : 0) +
           (item.publishSelected ? item.product.publishPrice : 0) +
           (item.storeOptimizationSelected ? item.product.storeOptimizationPrice : 0);
-        const sellerEarning = (item.price - (sellerFee + item.discount)) + item.extendedAmount + addonAmount;
+        let activeDiscount = item.discount;
+        if (item.product.campaignProducts) {
+          const now = new Date();
+          const activeCampaign = item.product.campaignProducts.find(
+            cp => cp.campaign.status === 1 && new Date(cp.campaign.startDate) <= now && new Date(cp.campaign.endDate) >= now
+          );
+          if (activeCampaign) {
+            activeDiscount = (item.price * activeCampaign.discountPercentage) / 100;
+          }
+        }
+
+        const sellerEarning = (item.price - (sellerFee + activeDiscount)) + item.extendedAmount + addonAmount;
         const purchaseCode = `${userId.slice(-6)}-${item.productId.slice(-6)}-${generateTrx(6)}-${Date.now().toString(36)}`;
 
         await tx.orderItem.create({
@@ -113,7 +126,7 @@ export async function POST(req: NextRequest) {
             buyerFee: item.buyerFee,
             quantity: 1,
             license: parseInt(item.license),
-            discount: item.discount,
+            discount: activeDiscount,
             sellerEarning,
             reskinSelected: item.reskinSelected,
             publishSelected: item.publishSelected,
@@ -165,7 +178,7 @@ export async function POST(req: NextRequest) {
 
         // 2b. Process Referral Commission for this item
         if (isReferralActive && buyer.refBy) {
-          const refAmount = (gs.referralFixed || 0) + (sellerEarning * (gs.referralPercentage || 0) / 100);
+          const refAmount = (0) + (sellerEarning * (0) / 100);
           if (refAmount > 0) {
             await tx.user.update({
               where: { id: buyer.refBy },

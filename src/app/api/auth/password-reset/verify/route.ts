@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
         where: { email: resetToken.email },
         data: {
           password: hashedPassword,
-          passwordAlgo: "bcrypt-2b",
         },
       });
 

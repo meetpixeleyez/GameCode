@@ -30,13 +30,6 @@ async function main() {
         data: {
           ...ru,
           password: "$2b$12$placeholderhashforseedusersXXXXXXXXXXXXXXXXXXXXXXX",
-          passwordAlgo: "bcrypt-2b",
-          status: 1,
-          ev: 1,
-          sv: 0,
-          kv: 0,
-          ts: 0,
-          tv: 1,
           profileComplete: 1,
         },
       });

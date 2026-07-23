@@ -57,9 +57,18 @@ export default function NewProductPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        let errorDesc = data.error || "Validation failed";
+        if (data.details) {
+          // Flatten details into a readable string
+          const messages = Object.entries(data.details)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+            .join("\n");
+          errorDesc = messages;
+        }
+
         toast({
           title: "Upload failed",
-          description: data.error || "Validation failed",
+          description: errorDesc,
           variant: "destructive",
         });
         return;

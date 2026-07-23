@@ -21,7 +21,13 @@ export async function GET() {
       where,
       include: {
         product: {
-          include: { user: true, category: true },
+          include: { 
+            user: true, 
+            category: true,
+            campaignProducts: {
+              include: { campaign: true }
+            }
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -38,7 +44,18 @@ export async function GET() {
         (item.reskinSelected ? item.product.reskinPrice : 0) +
         (item.publishSelected ? item.product.publishPrice : 0) +
         (item.storeOptimizationSelected ? item.product.storeOptimizationPrice : 0);
-      const itemTotal = item.price + item.buyerFee + item.extendedAmount + addonPrice;
+      let campaignDiscount = 0;
+      if (item.product.campaignProducts) {
+        const now = new Date();
+        const activeCampaign = item.product.campaignProducts.find(
+          cp => cp.campaign.status === 1 && new Date(cp.campaign.startDate) <= now && new Date(cp.campaign.endDate) >= now
+        );
+        if (activeCampaign) {
+          campaignDiscount = (item.price * activeCampaign.discountPercentage) / 100;
+        }
+      }
+
+      const itemTotal = (item.price - campaignDiscount) + item.buyerFee + item.extendedAmount + addonPrice;
 
       subtotal += itemTotal;
       buyerFeeTotal += item.buyerFee;
@@ -48,6 +65,7 @@ export async function GET() {
       return {
         ...item,
         addonPrice,
+        campaignDiscount,
         itemTotal,
       };
     });
@@ -87,7 +105,12 @@ export async function POST(req: NextRequest) {
     // Load product + category for price calculation
     const product = await db.product.findUnique({
       where: { id: productId, status: 1 },
-      include: { category: true },
+      include: { 
+        category: true,
+        campaignProducts: {
+          include: { campaign: true }
+        }
+      },
     });
 
     if (!product) {
@@ -126,6 +149,17 @@ export async function POST(req: NextRequest) {
       ? product.category?.twelveMonthExtendedFee || 0
       : 0;
 
+    let campaignDiscount = 0;
+    if (product.campaignProducts) {
+      const now = new Date();
+      const activeCampaign = product.campaignProducts.find(
+        cp => cp.campaign.status === 1 && new Date(cp.campaign.startDate) <= now && new Date(cp.campaign.endDate) >= now
+      );
+      if (activeCampaign) {
+        campaignDiscount = (price * activeCampaign.discountPercentage) / 100;
+      }
+    }
+
     const cart = await db.cart.create({
       data: {
         productId,
@@ -138,6 +172,7 @@ export async function POST(req: NextRequest) {
         isExtended: isExtended ? 1 : 0,
         extendedAmount,
         price,
+        discount: campaignDiscount,
         buyerFee,
         sellerFee: 0, // calculated at checkout based on author level
         quantity: 1,

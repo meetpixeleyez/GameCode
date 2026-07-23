@@ -10,16 +10,12 @@ export async function GET(req: NextRequest) {
     }
 
     const users = await db.user.findMany({
-      where: {
-        kv: { in: [1, 2, 0] },
-      },
       select: {
         id: true,
         firstname: true,
         lastname: true,
         username: true,
         email: true,
-        kv: true,
         kycData: true,
         kycRejectionReason: true,
         createdAt: true,

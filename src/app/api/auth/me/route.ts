@@ -21,8 +21,6 @@ export async function GET() {
         profileComplete: true,
         isAuthor: true,
         status: true,
-        ev: true,
-        sv: true,
       },
     });
 

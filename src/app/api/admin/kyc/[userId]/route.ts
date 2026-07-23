@@ -20,7 +20,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         lastname: true,
         username: true,
         email: true,
-        kv: true,
         kycData: true,
         kycRejectionReason: true,
         createdAt: true,
@@ -62,7 +61,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ use
       await db.user.update({
         where: { id: userId },
         data: {
-          kv: 1, // Verified
           kycRejectionReason: null,
         },
       });
@@ -73,7 +71,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ use
       await db.user.update({
         where: { id: userId },
         data: {
-          kv: 0, // Unverified
           kycRejectionReason: reason,
         },
       });

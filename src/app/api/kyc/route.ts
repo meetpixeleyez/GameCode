@@ -20,19 +20,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    if (user.kv === 1 || user.kv === 2) {
-      return NextResponse.json({ error: "KYC already verified or pending" }, { status: 400 });
+    if (user.kycData) {
+      return NextResponse.json({ error: "KYC already submitted" }, { status: 400 });
     }
 
     const updatedUser = await db.user.update({
       where: { id: session.sub },
       data: {
         kycData: JSON.stringify(body),
-        kv: 2, // 2 = Pending
       },
     });
 
-    return NextResponse.json({ success: true, kv: updatedUser.kv }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error("KYC submission error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
