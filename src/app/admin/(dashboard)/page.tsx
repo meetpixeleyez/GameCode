@@ -1,11 +1,14 @@
 import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/auth";
 import {
   Users,
   Package,
   Clock,
   DollarSign,
   Download,
+  ShoppingCart,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +17,8 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  const session = await getCurrentUser();
+
   const [
     totalUsers,
     totalSellers,
@@ -23,6 +28,9 @@ export default async function AdminDashboardPage() {
     totalSalesResult,
     recentOrders,
     recentWithdrawals,
+    adminProducts,
+    adminSalesCount,
+    adminRevenueResult,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { isAuthor: 1 } }),
@@ -45,12 +53,19 @@ export default async function AdminDashboardPage() {
         user: { select: { username: true, balance: true } },
       },
     }),
+    db.product.count({ where: { userId: session?.sub || "" } }),
+    db.orderItem.count({ where: { product: { userId: session?.sub || "" } } }),
+    db.orderItem.aggregate({
+      _sum: { sellerEarning: true },
+      where: { product: { userId: session?.sub || "" } },
+    }),
   ]);
 
   const totalSales = totalSalesResult._sum.amount || 0;
+  const adminRevenue = adminRevenueResult._sum.sellerEarning || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-1">
@@ -58,57 +73,107 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-sm text-muted-foreground">Total Users</h3>
-            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-              <Users className="h-4 w-4" />
+      {/* Admin's Own Stats (My Statistics) */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">My Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">My Products</h3>
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <Package className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{adminProducts}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Products added by you
             </div>
           </div>
-          <div className="text-2xl font-bold">{totalUsers}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {totalSellers} sellers registered
+
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">My Total Sales</h3>
+              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                <ShoppingCart className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{adminSalesCount}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Copies sold
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">My Revenue</h3>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{formatCurrency(adminRevenue)}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Revenue from your products
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-sm text-muted-foreground">Active Products</h3>
-            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
-              <Package className="h-4 w-4" />
+      <div className="border-t border-border" />
+
+      {/* Platform Stats Grid */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Platform Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Total Users</h3>
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <Users className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {totalSellers} sellers registered
             </div>
           </div>
-          <div className="text-2xl font-bold">{totalProducts}</div>
-          <div className="text-xs text-muted-foreground mt-1 text-orange-500">
-            {pendingProducts} pending approval
-          </div>
-        </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-sm text-muted-foreground">Total Revenue</h3>
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <DollarSign className="h-4 w-4" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Active Products</h3>
+              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                <Package className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{totalProducts}</div>
+            <div className="text-xs text-muted-foreground mt-1 text-orange-500">
+              {pendingProducts} pending approval
             </div>
           </div>
-          <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Lifetime platform volume
-          </div>
-        </div>
 
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-sm text-muted-foreground">Pending Payouts</h3>
-            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <Download className="h-4 w-4" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Total Revenue</h3>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <DollarSign className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Lifetime platform volume
             </div>
           </div>
-          <div className="text-2xl font-bold">{pendingWithdrawals}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Withdrawal requests waiting
+
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-sm text-muted-foreground">Pending Payouts</h3>
+              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
+                <Download className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold">{pendingWithdrawals}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Withdrawal requests waiting
+            </div>
           </div>
         </div>
       </div>

@@ -76,10 +76,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const refundAmount = refund.amount; // Total buyer paid
         const sellerEarning = refund.orderItem.sellerEarning; // What seller actually received after fees
 
-        // 3. Debit Seller Balance
+        // 3. Debit Seller Balance & Adjust Sales Metrics
         const seller = await tx.user.update({
           where: { id: sellerId },
-          data: { balance: { decrement: sellerEarning } },
+          data: { 
+            balance: { decrement: sellerEarning },
+            totalSold: { decrement: 1 },
+            totalSoldAmount: { decrement: sellerEarning - refund.orderItem.sellerFee },
+          },
+        });
+
+        // 3.5 Decrement Product Total Sold
+        await tx.product.update({
+          where: { id: refund.orderItem.productId },
+          data: { totalSold: { decrement: 1 } },
         });
 
         // 4. Credit Buyer Balance

@@ -13,6 +13,10 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { JwtPayload } from "@/lib/auth";
 import { SearchBar } from "@/components/SearchBar";
+import { CategoryMegaMenu } from "./category-mega-menu";
+
+type SubCategory = { id: string; name: string };
+type Category = { id: string; name: string; subCategories: SubCategory[] };
 
 type NavLink = {
   label: string;
@@ -28,7 +32,7 @@ const navLinks: NavLink[] = [
   { label: "Terms & Conditions", href: "/terms-conditions" },
 ];
 
-export function Header({ session, cartCount = 0 }: { session: JwtPayload | null; cartCount?: number }) {
+export function Header({ session, cartCount = 0, categories = [] }: { session: JwtPayload | null; cartCount?: number; categories?: Category[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -93,6 +97,7 @@ export function Header({ session, cartCount = 0 }: { session: JwtPayload | null;
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1">
+            <CategoryMegaMenu categories={categories} />
             {navLinks.map((link) => {
               const active = isActive(link.href);
               return link.children ? (
@@ -189,6 +194,9 @@ export function Header({ session, cartCount = 0 }: { session: JwtPayload | null;
         {mobileOpen && (
           <div className="absolute top-16 left-0 w-full bg-background border-b border-border shadow-lg py-4 px-4 flex flex-col gap-4 z-40 lg:hidden">
             <nav className="flex flex-col gap-2">
+              <div className="font-semibold text-sm px-2">
+                <CategoryMegaMenu categories={categories} />
+              </div>
               {navLinks.map((link) => {
                 const active = isActive(link.href);
                 return link.children ? (

@@ -20,6 +20,8 @@ interface ProductsPageProps {
     category?: string;
     sort_by?: string;
     date_range?: string;
+    featured?: string;
+    sub_category?: string;
   }>;
 }
 
@@ -39,12 +41,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const categoryFilter = sp.category && sp.category !== "all" ? sp.category : undefined;
   const sortBy = sp.sort_by || "new_item";
   const dateRange = sp.date_range ? parseInt(sp.date_range) : undefined;
+  const isFeatured = sp.featured === "true";
+  const subCategoryFilter = sp.sub_category && sp.sub_category !== "all" ? sp.sub_category : undefined;
 
   // Build where clause
   const where: any = {
     status: 1, // approved only
     isFree: 0, // exclude free items from main listing
   };
+
+  if (isFeatured) {
+    where.isFeatured = 1;
+  }
 
   if (search) {
     where.OR = [
@@ -57,6 +65,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (minPrice !== undefined) where.price = { ...where.price, gte: minPrice };
   if (maxPrice !== undefined) where.price = { ...where.price, lte: maxPrice };
   if (categoryFilter) where.categoryId = categoryFilter;
+  if (subCategoryFilter) where.subCategoryId = subCategoryFilter;
 
   if (dateRange) {
     const cutoff = new Date();
@@ -69,7 +78,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (sortBy === "best_selling") orderBy = { totalSold: "desc" };
   if (sortBy === "best_rated") orderBy = { avgRating: "desc" };
 
-  const [products, categories, counts] = await Promise.all([
+  const [products, categories, counts, subCategories] = await Promise.all([
     db.product.findMany({
       where,
       include: { user: true, category: true },
@@ -95,6 +104,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         where: { status: 1, createdAt: { gte: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) } },
       }),
     ]),
+    categoryFilter ? db.subCategory.findMany({
+      where: { categoryId: categoryFilter, status: 1 },
+      orderBy: { name: "asc" },
+    }) : Promise.resolve([]),
   ]);
 
   const [totalAny, totalLastYear, totalLastMonth, totalLastWeek, totalLastDay] = counts;
@@ -146,7 +159,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <form action="/products" method="get" className="space-y-4">
               {search && <input type="hidden" name="search" value={search} />}
               {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
+              {subCategoryFilter && <input type="hidden" name="sub_category" value={subCategoryFilter} />}
               {sortBy !== "new_item" && <input type="hidden" name="sort_by" value={sortBy} />}
+              {isFeatured && <input type="hidden" name="featured" value="true" />}
               
               <PriceFilter initialMin={minPrice} initialMax={maxPrice} maxLimit={500} />
               
@@ -162,7 +177,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <ul className="space-y-1">
               <li>
                 <Link
-                  href={buildUrl({ search, sort_by: sortBy, min_price: sp.min_price, max_price: sp.max_price })}
+                  href={buildUrl({ search, sort_by: sortBy, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
                   className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
                     !categoryFilter ? "bg-accent font-medium" : "text-muted-foreground"
                   }`}
@@ -173,7 +188,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {categories.map((cat) => (
                 <li key={cat.id}>
                   <Link
-                    href={buildUrl({ search, sort_by: sortBy, category: cat.id, min_price: sp.min_price, max_price: sp.max_price })}
+                    href={buildUrl({ search, sort_by: sortBy, category: cat.id, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
                     className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
                       categoryFilter === cat.id ? "bg-accent font-medium" : "text-muted-foreground"
                     }`}
@@ -184,6 +199,37 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               ))}
             </ul>
           </div>
+
+          {/* SubCategory filter - Only show if category is selected and has subcategories */}
+          {categoryFilter && subCategories.length > 0 && (
+            <div className="rounded-lg border border-border bg-card p-4">
+              <h3 className="font-semibold text-sm mb-3">Sub-Category</h3>
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    href={buildUrl({ search, sort_by: sortBy, category: categoryFilter, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
+                    className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
+                      !subCategoryFilter ? "bg-accent font-medium" : "text-muted-foreground"
+                    }`}
+                  >
+                    All Sub-Categories
+                  </Link>
+                </li>
+                {subCategories.map((sub) => (
+                  <li key={sub.id}>
+                    <Link
+                      href={buildUrl({ search, sort_by: sortBy, category: categoryFilter, sub_category: sub.id, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
+                      className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
+                        subCategoryFilter === sub.id ? "bg-accent font-medium" : "text-muted-foreground"
+                      }`}
+                    >
+                      {sub.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Date filter */}
           <div className="rounded-lg border border-border bg-card p-4">
@@ -209,20 +255,20 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               <span>Sort by:</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <SortButton active={sortBy === "new_item"} href={buildUrl({ search, category: sp.category, sort_by: "new_item", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price })}>
+              <SortButton active={sortBy === "new_item"} href={buildUrl({ search, category: sp.category, sub_category: sp.sub_category, sort_by: "new_item", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}>
                 New Item
               </SortButton>
-              <SortButton active={sortBy === "best_rated"} href={buildUrl({ search, category: sp.category, sort_by: "best_rated", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price })}>
+              <SortButton active={sortBy === "best_rated"} href={buildUrl({ search, category: sp.category, sub_category: sp.sub_category, sort_by: "best_rated", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}>
                 Best Rated
               </SortButton>
-              <SortButton active={sortBy === "best_selling"} href={buildUrl({ search, category: sp.category, sort_by: "best_selling", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price })}>
+              <SortButton active={sortBy === "best_selling"} href={buildUrl({ search, category: sp.category, sub_category: sp.sub_category, sort_by: "best_selling", date_range: sp.date_range, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}>
                 Best Selling
               </SortButton>
             </div>
           </div>
 
           {/* Active filters */}
-          {(search || categoryFilter || minPrice !== undefined || maxPrice !== undefined) && (
+          {(search || categoryFilter || subCategoryFilter || minPrice !== undefined || maxPrice !== undefined) && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-xs text-muted-foreground">Active filters:</span>
               {search && (
@@ -234,6 +280,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <Badge variant="secondary">
                   Category: {categories.find((c) => c.id === categoryFilter)?.name}
                 </Badge>
+              )}
+              {subCategoryFilter && (
+                <Badge variant="secondary">
+                  Sub-Category: {subCategories.find((c) => c.id === subCategoryFilter)?.name}
+                </Badge>
+              )}
+              {isFeatured && (
+                <Badge variant="secondary">Featured</Badge>
               )}
               {minPrice !== undefined && (
                 <Badge variant="secondary">Min: ${minPrice}</Badge>

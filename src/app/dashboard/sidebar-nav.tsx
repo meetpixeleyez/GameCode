@@ -15,7 +15,7 @@ const navItems = [
   { href: "/dashboard/collections", label: "Collections", icon: Folder },
   { href: "/dashboard/deposit", label: "Add Funds", icon: Wallet },
   { href: "/dashboard/transactions", label: "Transactions", icon: History },
-  { href: "/dashboard/kyc", label: "Verification", icon: ShieldAlert },
+
   { href: "/dashboard/support", label: "Support", icon: LifeBuoy },
   { href: "/dashboard/profile", label: "Profile", icon: User },
 ];

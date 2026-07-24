@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { db } from "./db";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "dev-secret-change-in-production-min-32-chars"
@@ -13,7 +14,7 @@ const REFRESH_COOKIE = "rgc_refresh";
 export interface JwtPayload {
   sub: string; // user id
   email: string;
-  role: "user" | "admin" | "reviewer";
+  role: "BUYER" | "SELLER" | "ADMIN" | "user" | "admin" | "reviewer";
   username?: string | null;
 }
 
@@ -105,7 +106,25 @@ export async function getCurrentUser(): Promise<JwtPayload | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ACCESS_COOKIE)?.value;
   if (!accessToken) return null;
-  return verifyAccessToken(accessToken);
+  
+  const payload = await verifyAccessToken(accessToken);
+  if (!payload) return null;
+
+  try {
+    const user = await db.user.findUnique({
+      where: { id: payload.sub },
+      select: { status: true },
+    });
+    
+    // status 1 = Active. Any other status (like 0 for Banned) should invalidate the session
+    if (!user || user.status !== 1) {
+      return null;
+    }
+  } catch (error) {
+    // Fallback if DB check fails
+  }
+
+  return payload;
 }
 
 // -----------------------------------------------------------------------------

@@ -59,6 +59,10 @@ export async function POST(req: NextRequest) {
       totalRefundAmount += orderItem.product.storeOptimizationPrice;
     }
 
+    // Include the buyer fee that was paid, and subtract any discount they received
+    totalRefundAmount += orderItem.buyerFee;
+    totalRefundAmount -= orderItem.discount;
+
     // Create the refund request and the first activity message
     const refundRequest = await db.$transaction(async (tx) => {
       const rr = await tx.refundRequest.create({

@@ -25,7 +25,7 @@ const navItems = [
   { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/withdrawals", label: "Withdrawals", icon: Download },
-  { href: "/admin/kyc", label: "KYC Requests", icon: ShieldAlert },
+
   { href: "/admin/blog", label: "Blog", icon: FileText },
   { href: "/admin/support", label: "Helpdesk", icon: LifeBuoy },
 ];
@@ -36,25 +36,27 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getCurrentUser();
-  if (!session || session.role !== "admin") {
+  if (!session || (session.role !== "admin" && session.role !== "ADMIN")) {
     redirect("/admin/login");
   }
 
-  const admin = await db.admin.findUnique({
+  const admin = await db.user.findUnique({
     where: { id: session.sub },
     select: {
       id: true,
-      name: true,
+      firstname: true,
+      lastname: true,
       username: true,
       email: true,
+      role: true,
     },
   });
 
-  if (!admin) {
+  if (!admin || admin.role !== "ADMIN") {
     redirect("/admin/login");
   }
 
-  const displayName = admin.name || admin.username || "Admin";
+  const displayName = admin.firstname || admin.username || "Admin";
   const initials = displayName.charAt(0).toUpperCase();
 
   return (

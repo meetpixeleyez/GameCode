@@ -23,9 +23,10 @@ export async function POST(req: NextRequest) {
     const { username, password } = parsed.data;
 
     // Allow login with either email or username
-    const admin = await db.admin.findFirst({
+    const admin = await db.user.findFirst({
       where: {
         OR: [{ email: username.toLowerCase() }, { username }],
+        role: "ADMIN",
       },
     });
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await db.admin.update({
+    await db.user.update({
       where: { id: admin.id },
       data: { lastLoginAt: new Date() },
     });
@@ -64,8 +65,8 @@ export async function POST(req: NextRequest) {
         id: admin.id,
         email: admin.email,
         username: admin.username,
-        name: admin.name,
-        role: "admin",
+        name: (admin.firstname || "") + " " + (admin.lastname || ""),
+        role: "ADMIN",
       },
     });
   } catch (error) {

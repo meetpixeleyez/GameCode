@@ -39,10 +39,7 @@ export default async function SellerLayout({
     redirect("/login");
   }
 
-  // Redirect to KYC if not verified is disabled for easier access
-  // if (user.kv !== 1) {
-  //   redirect("/dashboard/kyc");
-  // }
+
 
   // If not an author, show "become an author" prompt
   if (user.isAuthor !== 1) {

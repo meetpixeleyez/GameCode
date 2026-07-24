@@ -5,20 +5,16 @@ import { z } from "zod";
 
 const createProductSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(255),
+  categoryId: z.string().min(1, "Category is required"),
+  subCategoryId: z.string().min(1, "Subcategory is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   price: z.number().min(0, "Price must be >= 0"),
   priceCl: z.number().min(0, "Commercial price must be >= 0"),
-  demoUrl: z.string().url("Valid demo URL required"),
-  previewVideo: z
-    .string()
-    .url("Valid preview video URL required")
-    .optional()
-    .or(z.literal("")),
-  thumbnail: z
-    .string()
-    .url("Valid thumbnail URL required")
-    .optional()
-    .or(z.literal("")),
+  demoUrl: z.string().url("Valid demo URL required").optional().or(z.literal("")),
+  previewVideo: z.string().url("Valid preview video URL required").optional().or(z.literal("")),
+  thumbnail: z.string().min(1, "Thumbnail required"),
+  tempFile: z.string().min(1, "Main file required"),
+  inlinePreviewImage: z.string().optional(),
   tags: z.array(z.string()).optional(),
   metaTitle: z.string().max(255).optional(),
   metaDescription: z.string().optional(),
@@ -84,35 +80,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get default category (Game)
-    const category = await db.category.findFirst({
-      where: { status: 1 },
-    });
-    if (!category) {
-      return NextResponse.json(
-        { error: "No active category found" },
-        { status: 500 }
-      );
-    }
-
-    // Get or create default subcategory
-    const subCategory = await db.subCategory.findFirst({
-      where: { categoryId: category.id, status: 1 },
-    });
-    if (!subCategory) {
-      return NextResponse.json(
-        { error: "No active subcategory found" },
-        { status: 500 }
-      );
-    }
-
     const slug = await generateUniqueSlug(parsed.data.title);
 
     const product = await db.product.create({
       data: {
         userId: user.id,
-        categoryId: category.id,
-        subCategoryId: subCategory.id,
+        categoryId: parsed.data.categoryId,
+        subCategoryId: parsed.data.subCategoryId,
         title: parsed.data.title,
         slug,
         description: parsed.data.description,
@@ -123,7 +97,9 @@ export async function POST(req: NextRequest) {
         storeOptimizationPrice: parsed.data.storeOptimizationPrice,
         demoUrl: parsed.data.demoUrl,
         previewVideo: parsed.data.previewVideo || null,
-        thumbnail: parsed.data.thumbnail || null,
+        thumbnail: parsed.data.thumbnail,
+        tempFile: parsed.data.tempFile,
+        inlinePreviewImage: parsed.data.inlinePreviewImage || null,
         tags: parsed.data.tags ? JSON.stringify(parsed.data.tags) : null,
         metaTitle: parsed.data.metaTitle || null,
         metaDescription: parsed.data.metaDescription || null,

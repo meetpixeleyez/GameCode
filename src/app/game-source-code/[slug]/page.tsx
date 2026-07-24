@@ -4,6 +4,7 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductPurchaseSidebar } from "@/components/product/product-purchase-sidebar";
+import { ImageGallery } from "@/components/product/image-gallery";
 import { ReviewsSection } from "@/components/review/reviews-section";
 import { CommentsSection } from "@/components/review/comments-section";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -77,8 +78,32 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     },
   });
 
-  if (!product || product.status === 5 || product.status === 3) {
+  const session = await getCurrentUser();
+  const isAdmin = session?.role === "admin" || session?.role === "ADMIN";
+  const isAuthor = session?.sub === product?.userId;
+
+  if (!product) {
     notFound();
+  }
+
+  // If product is not approved (status 1), only author and admin can view it
+  if (product.status !== 1 && !isAdmin && !isAuthor) {
+    return (
+      <div className="container mx-auto px-4 py-32 text-center flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="bg-muted/50 p-6 rounded-full mb-6">
+          <Eye className="h-10 w-10 text-muted-foreground opacity-50" />
+        </div>
+        <h1 className="text-2xl font-bold mb-3">Product Unavailable</h1>
+        <p className="text-muted-foreground max-w-md mx-auto mb-8 text-sm">
+          This product is currently under review, has been taken down, or is otherwise not available for public viewing at this time.
+        </p>
+        <Button asChild>
+          <Link href="/products">
+            Browse Other Products
+          </Link>
+        </Button>
+      </div>
+    );
   }
 
   // Increment view count (1 row per product per day)
@@ -107,8 +132,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   // Check if user has favorited
   let isFavorited = false;
-  const session = await getCurrentUser();
-  const isAdmin = session?.role === "admin";
   if (session && session.sub && !isAdmin) {
     const fav = await db.productUser.findFirst({
       where: { userId: session.sub, productId: product.id }
@@ -137,6 +160,21 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     ? product.previewVideo.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")
     : null;
 
+  // Compile images for gallery
+  let screenshots: string[] = [];
+  try {
+    if (product.inlinePreviewImage) {
+      screenshots = JSON.parse(product.inlinePreviewImage);
+      if (!Array.isArray(screenshots)) screenshots = [screenshots];
+    }
+  } catch(e) {}
+  
+  if (screenshots.length === 0 && product.thumbnail) {
+    screenshots = [product.thumbnail];
+  } else if (product.thumbnail && !screenshots.includes(product.thumbnail)) {
+    screenshots = [product.thumbnail, ...screenshots];
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
@@ -158,27 +196,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main content - 2/3 width */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Preview image */}
-          <div className="relative aspect-video bg-muted rounded-lg overflow-hidden border border-border">
-            <Image
-              src={imageSrc}
-              alt={product.title}
-              fill
-              sizes="(max-width: 1024px) 100vw, 66vw"
-              className="object-cover"
-              priority
-            />
-            {youtubeEmbedUrl && (
-              <a
-                href={product.previewVideo || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/30 transition-colors group"
-              >
-                <PlayCircle className="h-16 w-16 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-              </a>
-            )}
-          </div>
+          {/* Interactive Image Gallery */}
+          <ImageGallery 
+            images={screenshots}
+            youtubeEmbedUrl={youtubeEmbedUrl}
+            productTitle={product.title}
+          />
 
           {/* Title + actions row */}
           <div>
@@ -415,9 +438,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <section className="mt-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold">More items by {authorName}</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href={`/authors/${authorName}`}>View Portfolio</Link>
-            </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {moreByAuthor.slice(0, 4).map((p) => (

@@ -74,12 +74,18 @@ export default async function RootLayout({
     where: cartCtx.userId ? { userId: cartCtx.userId } : { sessionId: cartCtx.sessionId },
   });
 
+  const categories = await db.category.findMany({
+    where: { status: 1 },
+    include: { subCategories: { where: { status: 1 }, orderBy: { name: 'asc' } } },
+    orderBy: { name: 'asc' },
+  });
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
-        <Header session={session} cartCount={cartCount} />
+        <Header session={session} cartCount={cartCount} categories={categories} />
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster />

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "./product-actions";
 import { formatCurrency } from "@/lib/utils";
-import { Eye, ExternalLink } from "lucide-react";
+import { Eye, ExternalLink, Plus } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,12 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
             Review and manage all products on the platform.
           </p>
         </div>
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Upload Product
+          </Link>
+        </Button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
@@ -97,7 +104,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                   <th className="px-6 py-4 font-medium">Author</th>
                   <th className="px-6 py-4 font-medium">Price</th>
                   <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Actions</th>
+                  <th className="px-6 py-4 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -107,7 +114,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                       <div className="flex items-center gap-3">
                         <div className="relative w-12 h-12 rounded bg-muted overflow-hidden shrink-0">
                           <Image
-                            src={product.inlinePreviewImage || product.thumbnail || "/products/placeholder.svg"}
+                            src={product.thumbnail || "/products/placeholder.svg"}
                             alt={product.title}
                             fill
                             className="object-cover"
@@ -141,7 +148,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
                       </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <ProductActions productId={product.id} currentStatus={product.status} />
+                      <ProductActions productId={product.id} currentStatus={product.status} isFeatured={product.isFeatured} />
                     </td>
                   </tr>
                 ))}

@@ -124,7 +124,7 @@ export default async function Home() {
             </p>
           </div>
           <Button variant="ghost" asChild className="hidden sm:flex">
-            <Link href="/#products">
+            <Link href="/products?featured=true">
               View All Items
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

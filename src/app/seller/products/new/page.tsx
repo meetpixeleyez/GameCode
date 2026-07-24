@@ -1,42 +1,99 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TagInput } from "@/components/ui/tag-input";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload, X } from "lucide-react";
 
 export default function NewProductPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [form, setForm] = useState({
     title: "",
+    categoryId: "",
+    subCategoryId: "",
     description: "",
     price: "",
     priceCl: "",
     demoUrl: "",
     previewVideo: "",
-    thumbnail: "",
-    tags: "",
+    tags: [] as string[],
     metaTitle: "",
     metaDescription: "",
     reskinPrice: "120",
     publishPrice: "25",
     storeOptimizationPrice: "50",
   });
+  
+  // File states
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCategories(data.categories);
+      })
+      .catch((err) => console.error("Failed to load categories", err));
+  }, []);
+
+  const activeCategory = categories.find((c) => c.id === form.categoryId);
+  const subCategories = activeCategory?.subCategories || [];
+
+  async function uploadFiles() {
+    const formData = new FormData();
+    if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
+    if (mainFile) formData.append("tempFile", mainFile);
+    
+    if (screenshotsFiles.length > 0) {
+      for (let i = 0; i < screenshotsFiles.length; i++) {
+        formData.append("inlinePreviewImage", screenshotsFiles[i]);
+      }
+    }
+
+    if (Array.from(formData.keys()).length === 0) return {};
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      throw new Error("File upload failed");
+    }
+    
+    const data = await res.json();
+    return data.files;
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSaving(true);
+    if (!form.categoryId || !form.subCategoryId) {
+      toast({ title: "Error", description: "Please select a Category and Subcategory.", variant: "destructive" });
+      return;
+    }
+    if (!thumbnailFile || !mainFile) {
+      toast({ title: "Error", description: "Thumbnail and Main File are required.", variant: "destructive" });
+      return;
+    }
 
+    setSaving(true);
     try {
+      toast({ title: "Uploading files...", description: "Please wait while we upload your files." });
+      const uploadedFiles = await uploadFiles();
+
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -47,31 +104,20 @@ export default function NewProductPage() {
           reskinPrice: parseFloat(form.reskinPrice) || 0,
           publishPrice: parseFloat(form.publishPrice) || 0,
           storeOptimizationPrice: parseFloat(form.storeOptimizationPrice) || 0,
-          tags: form.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
+          tags: form.tags,
+          thumbnail: uploadedFiles.thumbnail,
+          tempFile: uploadedFiles.tempFile,
+          inlinePreviewImage: uploadedFiles.inlinePreviewImage ? JSON.stringify(Array.isArray(uploadedFiles.inlinePreviewImage) ? uploadedFiles.inlinePreviewImage : [uploadedFiles.inlinePreviewImage]) : "[]",
         }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         let errorDesc = data.error || "Validation failed";
         if (data.details) {
-          // Flatten details into a readable string
-          const messages = Object.entries(data.details)
-            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
-            .join("\n");
-          errorDesc = messages;
+          errorDesc = Object.entries(data.details).map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`).join("\n");
         }
-
-        toast({
-          title: "Upload failed",
-          description: errorDesc,
-          variant: "destructive",
-        });
-        return;
+        throw new Error(errorDesc);
       }
 
       toast({
@@ -81,10 +127,10 @@ export default function NewProductPage() {
 
       router.push("/seller/products");
       router.refresh();
-    } catch {
+    } catch (err: any) {
       toast({
-        title: "Network error",
-        description: "Could not reach the server.",
+        title: "Upload failed",
+        description: err.message || "Could not reach the server.",
         variant: "destructive",
       });
     } finally {
@@ -108,6 +154,48 @@ export default function NewProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Category */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Select Category</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <select
+                  id="category"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  required
+                  value={form.categoryId}
+                  onChange={(e) => setForm({ ...form, categoryId: e.target.value, subCategoryId: "" })}
+                >
+                  <option value="" disabled>Select One</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subCategory">Subcategory *</Label>
+                <select
+                  id="subCategory"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  required
+                  value={form.subCategoryId}
+                  onChange={(e) => setForm({ ...form, subCategoryId: e.target.value })}
+                  disabled={!form.categoryId || subCategories.length === 0}
+                >
+                  <option value="" disabled>Select One</option>
+                  {subCategories.map((sc: any) => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Basic info */}
         <Card>
           <CardHeader>
@@ -116,44 +204,108 @@ export default function NewProductPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Product Title *</Label>
-              <Input
-                id="title"
-                required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g., Brain Teaser Screw Puzzle – Unity Game Source Code"
-              />
-              <p className="text-xs text-muted-foreground">
-                Descriptive title with key keywords for SEO.
-              </p>
+              <Input id="title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                required
-                rows={8}
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Describe your game, features, gameplay mechanics, and what makes it special..."
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter normal text. You may also use basic HTML if you prefer.
-              </p>
+              <RichTextEditor value={form.description} onChange={(val) => setForm({ ...form, description: val })} />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
-              <Input
-                id="tags"
-                value={form.tags}
-                onChange={(e) => setForm({ ...form, tags: e.target.value })}
-                placeholder="unity puzzle game, casual game, hyper casual, admob"
-              />
-              <p className="text-xs text-muted-foreground">
-                Helps buyers find your product via search.
-              </p>
+              <Label>Tags</Label>
+              <TagInput value={form.tags} onChange={(val) => setForm({ ...form, tags: val })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Files */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Files</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label>Thumbnail Image *</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="thumbnail" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose File
+                  </Label>
+                  <Input id="thumbnail" type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" required={!thumbnailFile} onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setThumbnailFile(e.target.files[0]);
+                  }} />
+                  {!thumbnailFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                </div>
+                {thumbnailFile && (
+                  <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
+                    <img src={URL.createObjectURL(thumbnailFile)} alt="Thumbnail" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => setThumbnailFile(null)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Supported Files: .png, .jpg, .jpeg. Image size must be 80x80 px</p>
+            </div>
+            <div className="space-y-3">
+              <Label>Main File (ZIP) *</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="mainFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose File
+                  </Label>
+                  <Input id="mainFile" type="file" accept=".zip,.rar,.7z" className="hidden" required={!mainFile} onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setMainFile(e.target.files[0]);
+                  }} />
+                  {!mainFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                </div>
+                {mainFile && (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4">{mainFile.name}</span>
+                    <button type="button" onClick={() => setMainFile(null)} className="text-muted-foreground hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">ZIP all the files for buyers.</p>
+            </div>
+            <div className="space-y-3">
+              <Label>Screenshots</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="screenshots" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Files
+                  </Label>
+                  <Input id="screenshots" type="file" accept="image/png, image/jpeg, image/jpg" multiple className="hidden" onChange={(e) => {
+                    if (e.target.files) {
+                      setScreenshotsFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                  }} />
+                  <span className="text-sm text-muted-foreground">
+                    {screenshotsFiles.length > 0 ? `${screenshotsFiles.length} file(s) selected` : "No file chosen"}
+                  </span>
+                </div>
+                {screenshotsFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {screenshotsFiles.map((file, idx) => (
+                      <div key={idx} className="relative w-24 h-24 border rounded-md overflow-hidden group">
+                        <img src={URL.createObjectURL(file)} alt="Screenshot" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setScreenshotsFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Upload multiple screenshot images.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="previewVideo">Preview Video (YouTube URL)</Label>
+              <Input id="previewVideo" type="url" value={form.previewVideo} onChange={(e) => setForm({ ...form, previewVideo: e.target.value })} />
             </div>
           </CardContent>
         </Card>
@@ -167,185 +319,30 @@ export default function NewProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price">Personal License Price ($) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="15.00"
-                />
+                <Input id="price" type="number" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="priceCl">Commercial License Price ($) *</Label>
-                <Input
-                  id="priceCl"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  value={form.priceCl}
-                  onChange={(e) => setForm({ ...form, priceCl: e.target.value })}
-                  placeholder="150.00"
-                />
+                <Input id="priceCl" type="number" step="0.01" required value={form.priceCl} onChange={(e) => setForm({ ...form, priceCl: e.target.value })} />
               </div>
             </div>
-
             <Separator />
-
             <div>
               <Label className="text-sm font-medium">Additional Service Prices</Label>
-              <p className="text-xs text-muted-foreground mb-3">
-                Optional services buyers can add to their purchase.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reskinPrice" className="text-xs">Reskin ($)</Label>
-                  <Input
-                    id="reskinPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.reskinPrice}
-                    onChange={(e) => setForm({ ...form, reskinPrice: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="publishPrice" className="text-xs">Publish ($)</Label>
-                  <Input
-                    id="publishPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.publishPrice}
-                    onChange={(e) => setForm({ ...form, publishPrice: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storeOptimizationPrice" className="text-xs">Store Opt ($)</Label>
-                  <Input
-                    id="storeOptimizationPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.storeOptimizationPrice}
-                    onChange={(e) => setForm({ ...form, storeOptimizationPrice: e.target.value })}
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                <div className="space-y-2"><Label>Reskin ($)</Label><Input type="number" step="0.01" value={form.reskinPrice} onChange={(e) => setForm({ ...form, reskinPrice: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Publish ($)</Label><Input type="number" step="0.01" value={form.publishPrice} onChange={(e) => setForm({ ...form, publishPrice: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Store Opt ($)</Label><Input type="number" step="0.01" value={form.storeOptimizationPrice} onChange={(e) => setForm({ ...form, storeOptimizationPrice: e.target.value })} /></div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Demo + Media */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Demo & Media</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="demoUrl">Demo URL *</Label>
-              <Input
-                id="demoUrl"
-                type="url"
-                required
-                value={form.demoUrl}
-                onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
-                placeholder="https://your-demo-url.com"
-              />
-              <p className="text-xs text-muted-foreground">
-                Link to a playable demo or APK download.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="previewVideo">Preview Video URL (YouTube)</Label>
-              <Input
-                id="previewVideo"
-                type="url"
-                value={form.previewVideo}
-                onChange={(e) => setForm({ ...form, previewVideo: e.target.value })}
-                placeholder="https://www.youtube.com/watch?v=..."
-              />
-              <p className="text-xs text-muted-foreground">
-                Gameplay trailer or demo video on YouTube.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="thumbnail">Thumbnail Image URL *</Label>
-              <Input
-                id="thumbnail"
-                type="url"
-                required
-                value={form.thumbnail}
-                onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
-                placeholder="https://example.com/thumbnail.png"
-              />
-              <p className="text-xs text-muted-foreground">
-                This image will be displayed on the game cards.
-              </p>
-            </div>
-
-            <div className="p-3 rounded-md bg-accent/50 text-xs text-muted-foreground flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-foreground">Note:</strong> Preview
-                image, screenshots, and main file upload will be available after the
-                initial product creation. The reviewer will request these during the
-                review process.
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* SEO */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">SEO (Optional)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="metaTitle">Meta Title</Label>
-              <Input
-                id="metaTitle"
-                value={form.metaTitle}
-                onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
-                placeholder="Custom title for search engines (defaults to product title)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="metaDescription">Meta Description</Label>
-              <Textarea
-                id="metaDescription"
-                rows={3}
-                value={form.metaDescription}
-                onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
-                placeholder="Short description for search engines (max 155 chars recommended)"
-              />
             </div>
           </CardContent>
         </Card>
 
         {/* Submit */}
         <div className="flex justify-end gap-3">
-          <Button variant="outline" type="button" asChild>
-            <Link href="/seller/products">Cancel</Link>
-          </Button>
+          <Button variant="outline" type="button" asChild><Link href="/seller/products">Cancel</Link></Button>
           <Button type="submit" disabled={saving}>
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Submit for Review
-              </>
-            )}
+            {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</> : <><Save className="mr-2 h-4 w-4" /> Submit for Review</>}
           </Button>
         </div>
       </form>

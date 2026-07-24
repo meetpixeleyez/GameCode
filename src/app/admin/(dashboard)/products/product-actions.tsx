@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check, X, Pencil, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,19 +17,36 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
-export function ProductActions({ productId, currentStatus }: { productId: string; currentStatus: number }) {
+export function ProductActions({ productId, currentStatus, isFeatured = 0 }: { productId: string; currentStatus: number; isFeatured?: number }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<"approve" | "reject" | "delete" | "take_down" | "republish" | null>(null);
 
-  async function updateStatus(status: number, actionName: string) {
-    setLoading(true);
+  // Reject modal state
+  const [rejectType, setRejectType] = useState<"2" | "3">("2"); // 2 = Soft, 3 = Hard
+  const [rejectReason, setRejectReason] = useState("");
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+
+  async function updateStatus(status: number, actionName: string, reason?: string) {
+    let actionType: "approve" | "reject" | "take_down" | "republish" = "approve";
+    if (status === 2 || status === 3) actionType = "reject";
+    if (status === 4) actionType = "take_down";
+    if (status === 1 && currentStatus === 4) actionType = "republish";
+    
+    setActionLoading(actionType);
     try {
+      const payload: any = {};
+      if (status !== -1) payload.status = status;
+      if (reason) payload.reason = reason;
+
       const res = await fetch(`/api/admin/products/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -39,6 +57,8 @@ export function ProductActions({ productId, currentStatus }: { productId: string
         title: "Success",
         description: `Product has been ${actionName.toLowerCase()}.`,
       });
+      setIsRejectModalOpen(false);
+      setRejectReason("");
       router.refresh();
     } catch (error) {
       toast({
@@ -47,28 +67,96 @@ export function ProductActions({ productId, currentStatus }: { productId: string
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setActionLoading(null);
     }
   }
 
+  async function toggleFeature() {
+    setActionLoading("approve"); // reuse loading state
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFeatured: isFeatured === 1 ? 0 : 1 }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      toast({
+        title: "Success",
+        description: `Product has been ${isFeatured === 1 ? "removed from" : "added to"} featured products.`,
+      });
+      router.refresh();
+    } catch (error) {
+      toast({ title: "Error", description: "Could not update feature status", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleDelete() {
+    setActionLoading("delete");
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+
+      toast({
+        title: "Success",
+        description: "Product has been deleted permanently.",
+      });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not delete product.",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  const handleRejectSubmit = () => {
+    if (!rejectReason.trim()) {
+      toast({
+        title: "Reason required",
+        description: "Please provide a reason for rejection.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const statusVal = parseInt(rejectType);
+    const actionName = statusVal === 2 ? "Soft Rejected" : "Hard Rejected";
+    updateStatus(statusVal, actionName, rejectReason);
+  };
+
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center justify-center">
+      {currentStatus !== 3 && (
+        <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+          <Link href={`/admin/products/${productId}/edit`}>
+            <Pencil className="h-4 w-4" />
+          </Link>
+        </Button>
+      )}
+
       {currentStatus === 0 && (
         <>
           <Button 
             size="sm" 
             variant="default" 
             onClick={() => updateStatus(1, "Approved")}
-            disabled={loading}
+            disabled={actionLoading !== null}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+            {actionLoading === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
             Approve
           </Button>
 
-          <AlertDialog>
+          <AlertDialog open={isRejectModalOpen} onOpenChange={setIsRejectModalOpen}>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="destructive" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
+              <Button size="sm" variant="destructive" disabled={actionLoading !== null}>
+                {actionLoading === "reject" ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-1" />}
                 Reject
               </Button>
             </AlertDialogTrigger>
@@ -76,24 +164,62 @@ export function ProductActions({ productId, currentStatus }: { productId: string
               <AlertDialogHeader>
                 <AlertDialogTitle>Reject Product</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to reject this product? The seller will be notified that their product was not approved.
+                  Select the type of rejection and provide feedback to the author.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              
+              <div className="py-4 space-y-4">
+                <RadioGroup value={rejectType} onValueChange={(val) => setRejectType(val as "2" | "3")}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="2" id="soft-reject" />
+                    <Label htmlFor="soft-reject">Soft Reject (Author can fix and resubmit)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="3" id="hard-reject" />
+                    <Label htmlFor="hard-reject">Hard Reject (Permanent rejection)</Label>
+                  </div>
+                </RadioGroup>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reason">Rejection Reason</Label>
+                  <Textarea 
+                    id="reason" 
+                    placeholder="Explain why this product is being rejected..."
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              </div>
+
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => updateStatus(2, "Soft Rejected")}>
-                  Yes, Reject
-                </AlertDialogAction>
+                <AlertDialogCancel onClick={() => {
+                  setRejectReason("");
+                  setRejectType("2");
+                }}>Cancel</AlertDialogCancel>
+                <Button variant="destructive" onClick={handleRejectSubmit} disabled={actionLoading !== null || !rejectReason.trim()}>
+                  {actionLoading === "reject" ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Confirm Rejection
+                </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         </>
       )}
       {currentStatus === 1 && (
-        <AlertDialog>
+        <>
+          <Button 
+            size="sm" 
+            variant={isFeatured === 1 ? "secondary" : "outline"} 
+            onClick={toggleFeature}
+            disabled={actionLoading !== null}
+          >
+            {isFeatured === 1 ? "Unfeature" : "Feature"}
+          </Button>
+          <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="outline" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Take Down"}
+            <Button size="sm" variant="outline" disabled={actionLoading !== null}>
+              {actionLoading === "take_down" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Take Down"}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -111,7 +237,54 @@ export function ProductActions({ productId, currentStatus }: { productId: string
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </>
       )}
+      
+      {currentStatus === 4 && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="default" disabled={actionLoading !== null}>
+              {actionLoading === "republish" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Republish"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Republish Product</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to make this product live again? It will be visible and purchasable by users.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => updateStatus(1, "Republished")}>
+                Yes, Republish
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={actionLoading !== null}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this product from the platform. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

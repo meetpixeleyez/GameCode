@@ -9,6 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function LoginForm() {
   const router = useRouter();
@@ -18,6 +28,7 @@ function LoginForm() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -38,11 +49,15 @@ function LoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast({
-          title: "Login failed",
-          description: data.error || "Invalid credentials",
-          variant: "destructive",
-        });
+        if (res.status === 403 && data.error && data.error.toLowerCase().includes("banned")) {
+          setShowBanModal(true);
+        } else {
+          toast({
+            title: "Login failed",
+            description: data.error || "Invalid credentials",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -183,6 +198,25 @@ function LoginForm() {
           </Link>
         </p>
       </div>
+
+      <AlertDialog open={showBanModal} onOpenChange={setShowBanModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              Account Suspended
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your account has been suspended or banned from our platform due to a violation of our terms. If you believe this is a mistake, please contact our support team to appeal this decision.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Link href="/contact">Contact Support</Link>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

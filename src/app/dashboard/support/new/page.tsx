@@ -130,7 +130,7 @@ export default function NewSupportTicketPage() {
               <div>
                 <h3 className="text-xl font-semibold">Billing & Account</h3>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Issues with your wallet balance, KYC verification, or reporting a user.
+                  Issues with your wallet balance or reporting a user.
                 </p>
               </div>
             </CardContent>

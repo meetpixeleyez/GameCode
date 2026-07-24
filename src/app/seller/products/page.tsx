@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Package, Star } from "lucide-react";
+import { Plus, Package, Star } from "lucide-react";
+import { ProductSellerActions } from "./product-seller-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,11 @@ export default async function SellerProductsPage({ searchParams }: ProductsPageP
       createdAt: true,
       thumbnail: true,
       inlinePreviewImage: true,
+      rejections: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { reason: true },
+      },
     },
   });
 
@@ -139,9 +145,9 @@ export default async function SellerProductsPage({ searchParams }: ProductsPageP
                       className="shrink-0"
                     >
                       <div className="w-16 h-16 rounded-md overflow-hidden bg-muted relative">
-                        {product.inlinePreviewImage || product.thumbnail ? (
+                        {product.thumbnail ? (
                           <img
-                            src={product.inlinePreviewImage || product.thumbnail || ""}
+                            src={product.thumbnail}
                             alt={product.title}
                             className="w-full h-full object-cover"
                           />
@@ -193,6 +199,14 @@ export default async function SellerProductsPage({ searchParams }: ProductsPageP
                           year: "numeric",
                         })}
                       </p>
+                      {(product.status === 2 || product.status === 3) && product.rejections && product.rejections.length > 0 && (
+                        <div className={`mt-2 p-3 rounded-md text-sm ${product.status === 3 ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'} border`}>
+                          <span className="font-semibold block mb-1">
+                            {product.status === 3 ? 'Permanent Rejection Reason:' : 'Required Changes (Soft Reject):'}
+                          </span>
+                          {product.rejections[0].reason}
+                        </div>
+                      )}
                     </div>
 
                     {/* Status + actions */}
@@ -200,13 +214,7 @@ export default async function SellerProductsPage({ searchParams }: ProductsPageP
                       <Badge variant={statusInfo.variant} className="text-xs">
                         {statusInfo.label}
                       </Badge>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                          <Link href={`/game-source-code/${product.slug}`}>
-                            <Eye className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
-                      </div>
+                        <ProductSellerActions productId={product.id} slug={product.slug!} status={product.status} />
                     </div>
                   </div>
                 </CardContent>

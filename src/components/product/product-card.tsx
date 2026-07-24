@@ -34,7 +34,7 @@ export async function ProductCard({ product, initialIsFavorited = false }: Produ
   const session = await getCurrentUser();
   const isAdmin = session?.role === "admin";
   const authorName = product.user?.username || "Ready Game Code";
-  const imageSrc = product.inlinePreviewImage || product.thumbnail || "/products/placeholder.svg";
+  const imageSrc = product.thumbnail || "/products/placeholder.svg";
 
   // Check for active campaign discount
   let activeDiscount = 0;

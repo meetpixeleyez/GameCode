@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const buyer = await db.user.findUnique({ where: { id: userId } });
     if (!buyer) return NextResponse.json({ error: "Buyer not found" }, { status: 400 });
 
-    const isReferralActive = false; // Referral feature disabled (SiteSetting removed)
+
 
     // Load cart items
     const cartItems = await db.cart.findMany({
@@ -176,31 +176,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // 2b. Process Referral Commission for this item
-        if (isReferralActive && buyer.refBy) {
-          const refAmount = (0) + (sellerEarning * (0) / 100);
-          if (refAmount > 0) {
-            await tx.user.update({
-              where: { id: buyer.refBy },
-              data: { balance: { increment: refAmount } }
-            });
-            const refUser = await tx.user.findUnique({ where: { id: buyer.refBy } });
-            if (refUser) {
-              await tx.transaction.create({
-                data: {
-                  userId: refUser.id,
-                  amount: refAmount,
-                  charge: 0,
-                  postBalance: refUser.balance,
-                  trxType: "+",
-                  trx: order.trx,
-                  details: `Referral commission for Purchase Item by @${buyer.username}`,
-                  remark: "referral_commission",
-                },
-              });
-            }
-          }
-        }
+
       }
 
       // 3. Mark deposit as paid

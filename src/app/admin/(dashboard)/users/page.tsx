@@ -3,21 +3,31 @@ import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { UserActions } from "./user-actions";
 import { formatCurrency } from "@/lib/utils";
+import { UserSearch } from "./user-search";
 
 export const dynamic = "force-dynamic";
 
 interface AdminUsersPageProps {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; q?: string }>;
 }
 
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
-  const { filter } = await searchParams;
+  const { filter, q } = await searchParams;
   
-  let whereClause = {};
+  let whereClause: any = { role: { notIn: ["ADMIN"] } };
   if (filter === "sellers") {
-    whereClause = { isAuthor: 1 };
+    whereClause.isAuthor = 1;
   } else if (filter === "buyers") {
-    whereClause = { isAuthor: 0 };
+    whereClause.isAuthor = 0;
+  }
+
+  if (q) {
+    whereClause.OR = [
+      { firstname: { contains: q, mode: "insensitive" } },
+      { lastname: { contains: q, mode: "insensitive" } },
+      { email: { contains: q, mode: "insensitive" } },
+      { username: { contains: q, mode: "insensitive" } },
+    ];
   }
 
   const users = await db.user.findMany({
@@ -30,8 +40,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     }
   });
 
-  const totalUsers = await db.user.count();
-  const totalSellers = await db.user.count({ where: { isAuthor: 1 } });
+  const baseCountWhere = { role: { notIn: ["ADMIN"] as any } };
+  const totalUsers = await db.user.count({ where: baseCountWhere });
+  const totalSellers = await db.user.count({ where: { ...baseCountWhere, isAuthor: 1 } });
   const totalBuyers = totalUsers - totalSellers;
 
   return (
@@ -43,6 +54,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
             Review and manage buyers and sellers.
           </p>
         </div>
+        <UserSearch />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">

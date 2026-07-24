@@ -16,6 +16,12 @@ datasource db {
 // AUTH & USERS
 // =============================================================================
 
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
 model User {
   id                String   @id @default(cuid())
   email             String   @unique
@@ -25,7 +31,7 @@ model User {
   dialCode          String?
   countryCode       String?
   mobile            String?
-  refBy             String?  // referrer user id (0 = no referrer)
+  role              Role     @default(BUYER)
   password          String   // bcrypt hash; $2y$ prefix tolerated for migration
   countryName       String?
   balance           Float    @default(0)
@@ -36,8 +42,7 @@ model User {
   totalSold         Int      @default(0)
   totalSoldAmount   Float    @default(0)
   status            Int      @default(1) // 0=banned, 1=active
-  kycData           String?  // JSON
-  kycRejectionReason String?
+
   profileComplete   Int      @default(0)
   verCode           String?
   verCodeSendAt     DateTime?
@@ -79,21 +84,7 @@ model User {
   @@map("users")
 }
 
-model Admin {
-  id              String   @id @default(cuid())
-  name            String
-  email           String   @unique
-  username        String   @unique
-  emailVerifiedAt DateTime?
-  image           String?
-  password        String
-  rememberToken   String?
-  lastLoginAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 
-  @@map("admins")
-}
 
 model PasswordResetToken {
   id        String   @id @default(cuid())

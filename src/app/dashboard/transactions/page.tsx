@@ -78,7 +78,7 @@ export default async function TransactionsPage() {
                           <Badge 
                             variant="outline" 
                             className={`text-[10px] uppercase mt-1 ${
-                              ["deposit", "new_sale", "referral_commission", "refund"].includes(trx.remark)
+                              ["deposit", "new_sale", "refund"].includes(trx.remark)
                                 ? "border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10"
                                 : ["purchase", "withdraw", "seller_fee"].includes(trx.remark)
                                 ? "border-orange-500/30 text-orange-600 dark:text-orange-400 bg-orange-500/10"
