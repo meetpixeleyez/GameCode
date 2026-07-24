@@ -46,6 +46,8 @@ model User {
   profileComplete   Int      @default(0)
   verCode           String?
   verCodeSendAt     DateTime?
+  resetToken        String?  // Secure token for forgot password
+  resetTokenExpiry  DateTime?
   isAuthor          Int      @default(0)
   isAuthorFeatured  Int      @default(0)
   authorInfo        String?  // JSON (form data)

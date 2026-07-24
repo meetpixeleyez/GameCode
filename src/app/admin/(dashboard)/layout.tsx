@@ -4,31 +4,23 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { MobileNavSelect } from "./mobile-nav";
-import {
-  LayoutDashboard,
-  Users,
-  Package,
-  Download,
-  Settings,
-  ShieldCheck,
-  FolderTree,
-  FileText,
-  LifeBuoy,
-  ShieldAlert,
-} from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { AdminNav } from "./admin-nav";
 
 export const dynamic = "force-dynamic";
 
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/categories", label: "Categories", icon: FolderTree },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/withdrawals", label: "Withdrawals", icon: Download },
-
-  { href: "/admin/blog", label: "Blog", icon: FileText },
-  { href: "/admin/support", label: "Helpdesk", icon: LifeBuoy },
+const mobileNavItems = [
+  { href: "/admin", label: "Dashboard" },
+  { href: "/admin/users", label: "Users" },
+  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/products", label: "Products" },
+  { href: "/admin/withdrawals", label: "Withdrawals" },
+  { href: "/admin/refunds", label: "Refunds" },
+  { href: "/admin/blog", label: "Blog" },
+  { href: "/admin/support", label: "Helpdesk" },
 ];
+
+
 
 export default async function AdminLayout({
   children,
@@ -78,21 +70,7 @@ export default async function AdminLayout({
             </div>
 
             {/* Navigation */}
-            <nav className="rounded-lg border border-border bg-card overflow-hidden flex flex-col">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-muted transition-colors border-b border-border last:border-0"
-                >
-                  <item.icon className="h-4 w-4 text-muted-foreground" />
-                  {item.label}
-                </Link>
-              ))}
-              <div className="p-2 border-t border-border">
-                <LogoutButton />
-              </div>
-            </nav>
+            <AdminNav />
           </div>
         </aside>
 
@@ -102,7 +80,7 @@ export default async function AdminLayout({
              <ShieldCheck className="h-5 w-5 text-primary" />
              <span className="font-medium">Admin Panel</span>
            </div>
-           <MobileNavSelect navItems={navItems.map(item => ({ href: item.href, label: item.label }))} />
+           <MobileNavSelect navItems={mobileNavItems} />
         </div>
 
         {/* Main content */}

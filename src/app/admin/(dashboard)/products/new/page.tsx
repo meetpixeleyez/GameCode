@@ -39,6 +39,13 @@ export default function AdminNewProductPage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [mainFile, setMainFile] = useState<File | null>(null);
   const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
+  
+  // Track uploaded URLs to prevent duplicate uploads on validation failure
+  const [uploadedUrls, setUploadedUrls] = useState<any>({
+    thumbnail: "",
+    file: "",
+    inlinePreviewImage: [] as string[]
+  });
 
   useEffect(() => {
     fetch("/api/categories")
@@ -84,15 +91,33 @@ export default function AdminNewProductPage() {
       toast({ title: "Error", description: "Please select a Category and Subcategory.", variant: "destructive" });
       return;
     }
-    if (!thumbnailFile || !mainFile) {
+    if ((!thumbnailFile && !uploadedUrls.thumbnail) || (!mainFile && !uploadedUrls.file)) {
       toast({ title: "Error", description: "Thumbnail and Main File are required.", variant: "destructive" });
       return;
     }
 
     setSaving(true);
     try {
-      toast({ title: "Uploading files...", description: "Please wait while we upload your files." });
-      const uploadedFiles = await uploadFiles();
+      let finalUrls = { ...uploadedUrls };
+      
+      if (thumbnailFile || mainFile || screenshotsFiles.length > 0) {
+        toast({ title: "Uploading files...", description: "Please wait while we upload your files." });
+        const newUploadedFiles = await uploadFiles();
+        
+        if (newUploadedFiles.thumbnail) finalUrls.thumbnail = newUploadedFiles.thumbnail;
+        if (newUploadedFiles.file) finalUrls.file = newUploadedFiles.file;
+        if (newUploadedFiles.inlinePreviewImage) {
+           const newScreenshots = Array.isArray(newUploadedFiles.inlinePreviewImage) 
+              ? newUploadedFiles.inlinePreviewImage 
+              : [newUploadedFiles.inlinePreviewImage];
+           finalUrls.inlinePreviewImage = [...finalUrls.inlinePreviewImage, ...newScreenshots];
+        }
+        
+        setUploadedUrls(finalUrls);
+        setThumbnailFile(null);
+        setMainFile(null);
+        setScreenshotsFiles([]);
+      }
 
       const res = await fetch("/api/admin/products", {
         method: "POST",
@@ -105,9 +130,9 @@ export default function AdminNewProductPage() {
           publishPrice: parseFloat(form.publishPrice) || 0,
           storeOptimizationPrice: parseFloat(form.storeOptimizationPrice) || 0,
           tags: form.tags,
-          thumbnail: uploadedFiles.thumbnail,
-          file: uploadedFiles.file,
-          inlinePreviewImage: uploadedFiles.inlinePreviewImage ? JSON.stringify(Array.isArray(uploadedFiles.inlinePreviewImage) ? uploadedFiles.inlinePreviewImage : [uploadedFiles.inlinePreviewImage]) : "[]",
+          thumbnail: finalUrls.thumbnail,
+          file: finalUrls.file,
+          inlinePreviewImage: JSON.stringify(finalUrls.inlinePreviewImage),
         }),
       });
 
@@ -231,19 +256,23 @@ export default function AdminNewProductPage() {
                     <Upload className="w-4 h-4 mr-2" />
                     Choose File
                   </Label>
-                  <Input id="thumbnail" type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" required={!thumbnailFile} onChange={(e) => {
+                  <Input id="thumbnail" type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" required={!thumbnailFile && !uploadedUrls.thumbnail} onChange={(e) => {
                     if (e.target.files && e.target.files[0]) setThumbnailFile(e.target.files[0]);
                   }} />
-                  {!thumbnailFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                  {!thumbnailFile && !uploadedUrls.thumbnail && <span className="text-sm text-muted-foreground">No file chosen</span>}
                 </div>
-                {thumbnailFile && (
+                {thumbnailFile ? (
                   <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
                     <img src={URL.createObjectURL(thumbnailFile)} alt="Thumbnail" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => setThumbnailFile(null)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <X className="w-3 h-3" />
                     </button>
                   </div>
-                )}
+                ) : uploadedUrls.thumbnail ? (
+                  <div className="relative w-24 h-24 border rounded-md overflow-hidden">
+                    <img src={uploadedUrls.thumbnail} alt="Uploaded Thumbnail" className="w-full h-full object-cover" />
+                  </div>
+                ) : null}
               </div>
               <p className="text-xs text-muted-foreground">Supported Files: .png, .jpg, .jpeg. Image size must be 80x80 px</p>
             </div>
@@ -255,19 +284,25 @@ export default function AdminNewProductPage() {
                     <Upload className="w-4 h-4 mr-2" />
                     Choose File
                   </Label>
-                  <Input id="mainFile" type="file" accept=".zip,.rar,.7z" className="hidden" required={!mainFile} onChange={(e) => {
+                  <Input id="mainFile" type="file" accept=".zip,.rar,.7z" className="hidden" required={!mainFile && !uploadedUrls.file} onChange={(e) => {
                     if (e.target.files && e.target.files[0]) setMainFile(e.target.files[0]);
                   }} />
-                  {!mainFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                  {!mainFile && !uploadedUrls.file && <span className="text-sm text-muted-foreground">No file chosen</span>}
                 </div>
-                {mainFile && (
+                {mainFile ? (
                   <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
                     <span className="text-sm truncate mr-4">{mainFile.name}</span>
                     <button type="button" onClick={() => setMainFile(null)} className="text-muted-foreground hover:text-destructive">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                )}
+                ) : uploadedUrls.file ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4 text-blue-600 font-medium">
+                      {uploadedUrls.file.split('/').pop()}
+                    </span>
+                  </div>
+                ) : null}
               </div>
               <p className="text-xs text-muted-foreground">ZIP all the files for buyers.</p>
             </div>

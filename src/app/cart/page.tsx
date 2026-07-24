@@ -219,7 +219,6 @@ export default function CartPage() {
                     <div className="w-24 h-24 rounded-md overflow-hidden bg-muted relative">
                       <Image
                         src={
-                          item.product.inlinePreviewImage ||
                           item.product.thumbnail ||
                           "/products/placeholder.svg"
                         }

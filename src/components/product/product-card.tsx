@@ -28,9 +28,10 @@ interface ProductCardProps {
     }[];
   };
   initialIsFavorited?: boolean;
+  priority?: boolean;
 }
 
-export async function ProductCard({ product, initialIsFavorited = false }: ProductCardProps) {
+export async function ProductCard({ product, initialIsFavorited = false, priority = false }: ProductCardProps) {
   const session = await getCurrentUser();
   const isAdmin = session?.role === "admin";
   const authorName = product.user?.username || "Ready Game Code";
@@ -62,6 +63,7 @@ export async function ProductCard({ product, initialIsFavorited = false }: Produ
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
+          priority={priority}
         />
         {/* Live Preview overlay */}
         <Link

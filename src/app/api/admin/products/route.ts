@@ -48,7 +48,7 @@ async function generateUniqueSlug(base: string): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
-    if (!session || session.role !== "ADMIN") {
+    if (!session || (session.role !== "ADMIN" && session.role !== "admin")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

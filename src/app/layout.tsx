@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/footer";
 import { getCurrentUser } from "@/lib/auth";
 import { getCartContext } from "@/lib/cart-session";
 import { db } from "@/lib/db";
+import { ChatWidgets } from "@/components/chat-widgets";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -88,6 +89,7 @@ export default async function RootLayout({
         <Header session={session} cartCount={cartCount} categories={categories} />
         <main className="flex-1">{children}</main>
         <Footer />
+        <ChatWidgets />
         <Toaster />
       </body>
     </html>

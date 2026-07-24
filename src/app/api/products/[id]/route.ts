@@ -2,15 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import { deleteLocalFiles } from "@/lib/file-utils";
 
 const updateProductSchema = z.object({
   title: z.string().min(3).max(255).optional(),
+  categoryId: z.string().optional(),
+  subCategoryId: z.string().optional(),
   description: z.string().min(10).optional(),
   price: z.number().min(0).optional(),
   priceCl: z.number().min(0).optional(),
-  demoUrl: z.string().url().optional(),
+  demoUrl: z.string().url().optional().or(z.literal("")),
   previewVideo: z.string().optional().or(z.literal("")),
   thumbnail: z.string().optional().or(z.literal("")),
+  file: z.string().optional().or(z.literal("")),
+  inlinePreviewImage: z.string().optional(),
   tags: z.array(z.string()).optional(),
   metaTitle: z.string().max(255).optional().or(z.literal("")),
   metaDescription: z.string().optional().or(z.literal("")),
@@ -40,6 +45,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const dataToUpdate: any = { ...parsed.data };
     if (parsed.data.tags) {
       dataToUpdate.tags = JSON.stringify(parsed.data.tags);
+    }
+
+    // Auto File Deletion Logic for Replaced Files
+    const filesToDelete: string[] = [];
+    
+    // Check thumbnail replacement
+    if (dataToUpdate.thumbnail !== undefined && dataToUpdate.thumbnail !== product.thumbnail && product.thumbnail) {
+      filesToDelete.push(product.thumbnail);
+    }
+    // Check main file replacement
+    if (dataToUpdate.file !== undefined && dataToUpdate.file !== product.file && product.file) {
+      filesToDelete.push(product.file);
+    }
+    // Check screenshots replacement/deletion
+    if (dataToUpdate.inlinePreviewImage !== undefined) {
+      let oldScreenshots: string[] = [];
+      try { oldScreenshots = JSON.parse(product.inlinePreviewImage || "[]"); } catch { oldScreenshots = []; }
+      
+      let newScreenshots: string[] = [];
+      try { newScreenshots = JSON.parse(dataToUpdate.inlinePreviewImage || "[]"); } catch { newScreenshots = []; }
+      
+      const removedScreenshots = oldScreenshots.filter(url => !newScreenshots.includes(url));
+      filesToDelete.push(...removedScreenshots);
+    }
+    
+    if (filesToDelete.length > 0) {
+      // Non-blocking file deletion
+      deleteLocalFiles(filesToDelete).catch(console.error);
     }
 
     const updated = await db.product.update({
@@ -98,6 +131,24 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     try {
       await db.product.delete({ where: { id } });
+      
+      // Auto File Deletion Logic for Deleted Product
+      const filesToDelete: string[] = [];
+      if (product.thumbnail) filesToDelete.push(product.thumbnail);
+      if (product.file) filesToDelete.push(product.file);
+      if (product.inlinePreviewImage) {
+        try {
+          const screens = JSON.parse(product.inlinePreviewImage);
+          if (Array.isArray(screens)) filesToDelete.push(...screens);
+        } catch {
+          // Ignore parse error
+        }
+      }
+      
+      if (filesToDelete.length > 0) {
+        deleteLocalFiles(filesToDelete).catch(console.error);
+      }
+      
     } catch (dbError: any) {
       if (dbError.code === "P2003") {
         return NextResponse.json({ error: "Cannot delete product. It has existing orders or related records. Please take it down instead." }, { status: 400 });

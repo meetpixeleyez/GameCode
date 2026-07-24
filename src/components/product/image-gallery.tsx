@@ -12,28 +12,13 @@ interface ImageGalleryProps {
 }
 
 export function ImageGallery({ images, youtubeEmbedUrl, productTitle }: ImageGalleryProps) {
-  // Build a unified media list
-  type MediaItem = { type: "image" | "video"; url: string; thumbnail: string };
+  type MediaItem = { type: "image"; url: string; thumbnail: string };
   const mediaList: MediaItem[] = [];
-  
-  if (youtubeEmbedUrl) {
-    // Extract video ID from embed URL for the thumbnail
-    // e.g. https://www.youtube.com/embed/xyz123
-    const videoIdMatch = youtubeEmbedUrl.match(/embed\/([^?]+)/);
-    const videoId = videoIdMatch ? videoIdMatch[1] : "";
-    const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "/products/placeholder.svg";
-    
-    mediaList.push({
-      type: "video" as const,
-      url: youtubeEmbedUrl,
-      thumbnail: thumbnailUrl,
-    });
-  }
 
   images.forEach(img => {
     if (img) {
       mediaList.push({
-        type: "image" as const,
+        type: "image",
         url: img,
         thumbnail: img,
       });
@@ -54,26 +39,15 @@ export function ImageGallery({ images, youtubeEmbedUrl, productTitle }: ImageGal
 
   return (
     <div className="space-y-4">
-      {/* Main Large Display */}
       <div className="relative aspect-video bg-muted rounded-lg overflow-hidden border border-border shadow-sm">
-        {activeMedia.type === "image" ? (
-          <Image
-            src={activeMedia.url}
-            alt={`${productTitle} - Image ${activeIndex + 1}`}
-            fill
-            sizes="(max-width: 1024px) 100vw, 66vw"
-            className="object-contain bg-black/5"
-            priority
-          />
-        ) : (
-          <iframe
-            src={activeMedia.url}
-            title={`${productTitle} gameplay`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
-        )}
+        <Image
+          src={activeMedia.url}
+          alt={`${productTitle} - Image ${activeIndex + 1}`}
+          fill
+          sizes="(max-width: 1024px) 100vw, 66vw"
+          className="object-contain bg-black/5"
+          priority
+        />
       </div>
 
       {/* Thumbnails Row */}
@@ -96,11 +70,6 @@ export function ImageGallery({ images, youtubeEmbedUrl, productTitle }: ImageGal
                 className="object-cover"
                 sizes="(max-width: 768px) 100px, 150px"
               />
-              {media.type === "video" && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                  <PlayCircle className="w-6 h-6 text-white" />
-                </div>
-              )}
             </button>
           ))}
         </div>

@@ -29,8 +29,7 @@ export default async function AdminDashboardPage() {
     recentOrders,
     recentWithdrawals,
     adminProducts,
-    adminSalesCount,
-    adminRevenueResult,
+    adminStats,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { isAuthor: 1 } }),
@@ -54,15 +53,15 @@ export default async function AdminDashboardPage() {
       },
     }),
     db.product.count({ where: { userId: session?.sub || "" } }),
-    db.orderItem.count({ where: { product: { userId: session?.sub || "" } } }),
-    db.orderItem.aggregate({
-      _sum: { sellerEarning: true },
-      where: { product: { userId: session?.sub || "" } },
+    db.user.findUnique({
+      where: { id: session?.sub || "" },
+      select: { totalSold: true, totalSoldAmount: true }
     }),
   ]);
 
   const totalSales = totalSalesResult._sum.amount || 0;
-  const adminRevenue = adminRevenueResult._sum.sellerEarning || 0;
+  const adminRevenue = adminStats?.totalSoldAmount || 0;
+  const adminSalesCount = adminStats?.totalSold || 0;
 
   return (
     <div className="space-y-8">

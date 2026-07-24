@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TagInput } from "@/components/ui/tag-input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload, X } from "lucide-react";
 
 interface ProductEditFormProps {
   initialData: {
     id: string;
+    categoryId: string;
+    subCategoryId: string;
     title: string;
     description: string;
     price: string;
@@ -21,6 +26,8 @@ interface ProductEditFormProps {
     demoUrl: string;
     previewVideo: string;
     thumbnail: string;
+    file: string;
+    inlinePreviewImage: string;
     tags: string;
     metaTitle: string;
     metaDescription: string;
@@ -35,16 +42,111 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
   const router = useRouter();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState(initialData);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const [form, setForm] = useState({
+    ...initialData,
+    tags: initialData.tags ? initialData.tags.split(",").map(t => t.trim()).filter(Boolean) : [] as string[],
+  });
 
   const backLink = isAdmin ? "/admin/products" : "/seller/products";
   const apiEndpoint = isAdmin ? `/api/admin/products/${initialData.id}` : `/api/products/${initialData.id}`;
 
+  // File states
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [mainFile, setMainFile] = useState<File | null>(null);
+  const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
+  
+  // Existing files
+  const [existingThumbnail, setExistingThumbnail] = useState(initialData.thumbnail);
+  const [existingMainFile, setExistingMainFile] = useState(initialData.file);
+  const [existingScreenshots, setExistingScreenshots] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCategories(data.categories);
+      })
+      .catch((err) => console.error("Failed to load categories", err));
+      
+    // Parse screenshots
+    try {
+      const parsed = JSON.parse(initialData.inlinePreviewImage);
+      if (Array.isArray(parsed)) setExistingScreenshots(parsed);
+    } catch {
+      if (initialData.inlinePreviewImage && initialData.inlinePreviewImage !== "[]") {
+        setExistingScreenshots([initialData.inlinePreviewImage]);
+      }
+    }
+  }, [initialData.inlinePreviewImage]);
+
+  const activeCategory = categories.find((c) => c.id === form.categoryId);
+  const subCategories = activeCategory?.subCategories || [];
+
+  async function uploadFiles() {
+    const formData = new FormData();
+    if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
+    if (mainFile) formData.append("file", mainFile);
+    
+    if (screenshotsFiles.length > 0) {
+      for (let i = 0; i < screenshotsFiles.length; i++) {
+        formData.append("inlinePreviewImage", screenshotsFiles[i]);
+      }
+    }
+
+    if (Array.from(formData.keys()).length === 0) return {};
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      throw new Error("File upload failed");
+    }
+    
+    const data = await res.json();
+    return data.files;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSaving(true);
+    if (!form.categoryId || !form.subCategoryId) {
+      toast({ title: "Error", description: "Please select a Category and Subcategory.", variant: "destructive" });
+      return;
+    }
 
+    setSaving(true);
     try {
+      let finalThumbnail = existingThumbnail;
+      let finalMainFile = existingMainFile;
+      let finalScreenshots = [...existingScreenshots];
+
+      if (thumbnailFile || mainFile || screenshotsFiles.length > 0) {
+        toast({ title: "Uploading files...", description: "Please wait while we upload new files." });
+        const uploadedFiles = await uploadFiles();
+        if (uploadedFiles.thumbnail) {
+          finalThumbnail = uploadedFiles.thumbnail;
+          setExistingThumbnail(finalThumbnail);
+          setThumbnailFile(null);
+        }
+        if (uploadedFiles.file) {
+          finalMainFile = uploadedFiles.file;
+          setExistingMainFile(finalMainFile);
+          setMainFile(null);
+        }
+        
+        if (uploadedFiles.inlinePreviewImage) {
+           const newScreenshots = Array.isArray(uploadedFiles.inlinePreviewImage) 
+              ? uploadedFiles.inlinePreviewImage 
+              : [uploadedFiles.inlinePreviewImage];
+           finalScreenshots = [...finalScreenshots, ...newScreenshots];
+           setExistingScreenshots(finalScreenshots);
+           setScreenshotsFiles([]);
+        }
+      }
+
       const res = await fetch(apiEndpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -55,29 +157,20 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
           reskinPrice: parseFloat(form.reskinPrice) || 0,
           publishPrice: parseFloat(form.publishPrice) || 0,
           storeOptimizationPrice: parseFloat(form.storeOptimizationPrice) || 0,
-          tags: form.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
+          tags: form.tags,
+          thumbnail: finalThumbnail,
+          file: finalMainFile,
+          inlinePreviewImage: JSON.stringify(finalScreenshots),
         }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         let errorDesc = data.error || "Validation failed";
         if (data.details) {
-          errorDesc = Object.entries(data.details)
-            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
-            .join("\n");
+          errorDesc = Object.entries(data.details).map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`).join("\n");
         }
-
-        toast({
-          title: "Update failed",
-          description: errorDesc,
-          variant: "destructive",
-        });
-        return;
+        throw new Error(errorDesc);
       }
 
       toast({
@@ -87,16 +180,20 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
 
       router.push(backLink);
       router.refresh();
-    } catch {
+    } catch (err: any) {
       toast({
-        title: "Network error",
-        description: "Could not reach the server.",
+        title: "Update failed",
+        description: err.message || "Could not reach the server.",
         variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   }
+
+  const removeExistingScreenshot = (idx: number) => {
+    setExistingScreenshots(prev => prev.filter((_, i) => i !== idx));
+  };
 
   return (
     <div className="space-y-6">
@@ -114,6 +211,49 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Category */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Category & Subcategory</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <select
+                  id="category"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  required
+                  value={form.categoryId}
+                  onChange={(e) => setForm({ ...form, categoryId: e.target.value, subCategoryId: "" })}
+                >
+                  <option value="" disabled>Select One</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subCategory">Subcategory *</Label>
+                <select
+                  id="subCategory"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  required
+                  value={form.subCategoryId}
+                  onChange={(e) => setForm({ ...form, subCategoryId: e.target.value })}
+                  disabled={!form.categoryId || subCategories.length === 0}
+                >
+                  <option value="" disabled>Select One</option>
+                  {subCategories.map((sc: any) => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Basic info */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Basic Information</CardTitle>
@@ -121,170 +261,157 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Product Title *</Label>
-              <Input
-                id="title"
-                required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-              />
+              <Input id="title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description *</Label>
-              <Textarea
-                id="description"
-                required
-                rows={8}
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
+              <RichTextEditor value={form.description} onChange={(val) => setForm({ ...form, description: val })} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
-              <Input
-                id="tags"
-                value={form.tags}
-                onChange={(e) => setForm({ ...form, tags: e.target.value })}
-              />
+              <Label>Tags</Label>
+              <TagInput value={form.tags} onChange={(val) => setForm({ ...form, tags: val })} />
             </div>
           </CardContent>
         </Card>
 
+        {/* Files */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Pricing ($)</CardTitle>
+            <CardTitle className="text-lg">Files</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label>Thumbnail Image *</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="thumbnail" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Change File
+                  </Label>
+                  <Input id="thumbnail" type="file" accept="image/png, image/jpeg, image/jpg" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setThumbnailFile(e.target.files[0]);
+                  }} />
+                  {!thumbnailFile && !existingThumbnail && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                </div>
+                {thumbnailFile ? (
+                  <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
+                    <img src={URL.createObjectURL(thumbnailFile)} alt="New Thumbnail" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => setThumbnailFile(null)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                  </div>
+                ) : existingThumbnail ? (
+                  <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
+                    <img src={existingThumbnail} alt="Current Thumbnail" className="w-full h-full object-cover" />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Label>Main File (ZIP) *</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="mainFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Change File
+                  </Label>
+                  <Input id="mainFile" type="file" accept=".zip,.rar,.7z" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setMainFile(e.target.files[0]);
+                  }} />
+                  {!mainFile && !existingMainFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                </div>
+                {mainFile ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4">{mainFile.name}</span>
+                    <button type="button" onClick={() => setMainFile(null)} className="text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></button>
+                  </div>
+                ) : existingMainFile ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4 text-blue-600 font-medium">
+                      {existingMainFile.split('/').pop()}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Label>Screenshots</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="screenshots" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Add More Files
+                  </Label>
+                  <Input id="screenshots" type="file" accept="image/png, image/jpeg, image/jpg" multiple className="hidden" onChange={(e) => {
+                    if (e.target.files) {
+                      setScreenshotsFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                  }} />
+                  <span className="text-sm text-muted-foreground">
+                    {screenshotsFiles.length > 0 ? `${screenshotsFiles.length} new file(s) selected` : "No new files"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {existingScreenshots.map((url, idx) => (
+                    <div key={`exist-${idx}`} className="relative w-24 h-24 border rounded-md overflow-hidden group">
+                      <img src={url} alt="Screenshot" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeExistingScreenshot(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {screenshotsFiles.map((file, idx) => (
+                    <div key={`new-${idx}`} className="relative w-24 h-24 border-2 border-primary border-dashed rounded-md overflow-hidden group">
+                      <img src={URL.createObjectURL(file)} alt="New Screenshot" className="w-full h-full object-cover opacity-80" />
+                      <button type="button" onClick={() => setScreenshotsFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="previewVideo">Preview Video (YouTube URL)</Label>
+              <Input id="previewVideo" type="url" value={form.previewVideo} onChange={(e) => setForm({ ...form, previewVideo: e.target.value })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pricing */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Pricing</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Regular License Price *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                />
+                <Label htmlFor="price">Personal License Price ($) *</Label>
+                <Input id="price" type="number" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="priceCl">Extended License Price *</Label>
-                <Input
-                  id="priceCl"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={form.priceCl}
-                  onChange={(e) => setForm({ ...form, priceCl: e.target.value })}
-                />
+                <Label htmlFor="priceCl">Commercial License Price ($) *</Label>
+                <Input id="priceCl" type="number" step="0.01" required value={form.priceCl} onChange={(e) => setForm({ ...form, priceCl: e.target.value })} />
               </div>
             </div>
-            
-            <div className="pt-4 space-y-4 border-t mt-4">
-              <h4 className="font-medium">Services & Add-ons</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reskinPrice">Reskin Price</Label>
-                  <Input
-                    id="reskinPrice"
-                    type="number"
-                    step="0.01"
-                    value={form.reskinPrice}
-                    onChange={(e) => setForm({ ...form, reskinPrice: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="publishPrice">Publish Price</Label>
-                  <Input
-                    id="publishPrice"
-                    type="number"
-                    step="0.01"
-                    value={form.publishPrice}
-                    onChange={(e) => setForm({ ...form, publishPrice: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storeOptimizationPrice">ASO Price</Label>
-                  <Input
-                    id="storeOptimizationPrice"
-                    type="number"
-                    step="0.01"
-                    value={form.storeOptimizationPrice}
-                    onChange={(e) => setForm({ ...form, storeOptimizationPrice: e.target.value })}
-                  />
-                </div>
+            <Separator />
+            <div>
+              <Label className="text-sm font-medium">Additional Service Prices</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                <div className="space-y-2"><Label>Reskin ($)</Label><Input type="number" step="0.01" value={form.reskinPrice} onChange={(e) => setForm({ ...form, reskinPrice: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Publish ($)</Label><Input type="number" step="0.01" value={form.publishPrice} onChange={(e) => setForm({ ...form, publishPrice: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Store Opt ($)</Label><Input type="number" step="0.01" value={form.storeOptimizationPrice} onChange={(e) => setForm({ ...form, storeOptimizationPrice: e.target.value })} /></div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Media & URLs</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="demoUrl">Demo URL * (APK/Play Store)</Label>
-              <Input
-                id="demoUrl"
-                type="url"
-                required
-                value={form.demoUrl}
-                onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="thumbnail">Thumbnail Image URL</Label>
-              <Input
-                id="thumbnail"
-                type="url"
-                value={form.thumbnail}
-                onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="previewVideo">Preview Video URL</Label>
-              <Input
-                id="previewVideo"
-                type="url"
-                value={form.previewVideo}
-                onChange={(e) => setForm({ ...form, previewVideo: e.target.value })}
-              />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">SEO (Optional)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="metaTitle">Meta Title</Label>
-              <Input
-                id="metaTitle"
-                value={form.metaTitle}
-                onChange={(e) => setForm({ ...form, metaTitle: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="metaDescription">Meta Description</Label>
-              <Textarea
-                id="metaDescription"
-                rows={3}
-                value={form.metaDescription}
-                onChange={(e) => setForm({ ...form, metaDescription: e.target.value })}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" asChild>
-            <Link href={backLink}>Cancel</Link>
-          </Button>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" type="button" asChild><Link href={backLink}>Cancel</Link></Button>
           <Button type="submit" disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Save Changes
+            {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
           </Button>
         </div>
       </form>

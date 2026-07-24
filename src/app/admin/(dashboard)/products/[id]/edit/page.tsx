@@ -32,6 +32,8 @@ export default async function AdminProductEditPage({ params }: { params: Promise
 
   const initialData = {
     id: product.id,
+    categoryId: product.categoryId || "",
+    subCategoryId: product.subCategoryId || "",
     title: product.title,
     description: product.description || "",
     price: product.price.toString(),
@@ -39,6 +41,8 @@ export default async function AdminProductEditPage({ params }: { params: Promise
     demoUrl: product.demoUrl || "",
     previewVideo: product.previewVideo || "",
     thumbnail: product.thumbnail || "",
+    file: product.file || "",
+    inlinePreviewImage: product.inlinePreviewImage || "[]",
     tags,
     metaTitle: product.metaTitle || "",
     metaDescription: product.metaDescription || "",
