@@ -206,7 +206,6 @@ export default function CheckoutPage() {
                       <div className="w-16 h-16 rounded-md overflow-hidden bg-muted relative">
                         <Image
                           src={
-                            item.product.inlinePreviewImage ||
                             item.product.thumbnail ||
                             "/products/placeholder.svg"
                           }

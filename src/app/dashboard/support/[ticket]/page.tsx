@@ -198,7 +198,7 @@ export default function TicketDetailPage() {
               <CardContent className="p-0">
                 <div className="relative h-40 w-full bg-muted">
                   <Image 
-                    src={ticket.product.inlinePreviewImage || ticket.product.thumbnail || "/products/placeholder.svg"} 
+                    src={ticket.product.thumbnail || "/products/placeholder.svg"} 
                     alt={ticket.product.title}
                     fill
                     className="object-cover"
