@@ -69,6 +69,7 @@ export function ImageGallery({ images, youtubeEmbedUrl, productTitle }: ImageGal
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100px, 150px"
+                priority={idx < 4}
               />
             </button>
           ))}

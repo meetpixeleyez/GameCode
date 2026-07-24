@@ -117,7 +117,6 @@ export default async function PurchasesPage({ searchParams }: PurchasesPageProps
                         <div className="w-14 h-14 rounded-md overflow-hidden bg-muted relative">
                           <Image
                             src={
-                              item.product.inlinePreviewImage ||
                               item.product.thumbnail ||
                               "/products/placeholder.svg"
                             }

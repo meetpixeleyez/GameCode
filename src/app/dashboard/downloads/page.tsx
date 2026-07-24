@@ -62,7 +62,6 @@ export default async function DownloadsPage() {
                   <div className="w-20 h-20 rounded-md overflow-hidden bg-muted relative">
                     <Image
                       src={
-                        item.product.inlinePreviewImage ||
                         item.product.thumbnail ||
                         "/products/placeholder.svg"
                       }
@@ -108,9 +107,11 @@ export default async function DownloadsPage() {
                   </p>
 
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="default">
-                      <Download className="h-3.5 w-3.5 mr-1" />
-                      Download
+                    <Button size="sm" variant="default" asChild>
+                      <a href={item.product.file || "#"} download target="_blank">
+                        <Download className="h-3.5 w-3.5 mr-1" />
+                        Download
+                      </a>
                     </Button>
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`/game-source-code/${item.product.slug}`}>
