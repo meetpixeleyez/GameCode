@@ -55,17 +55,17 @@ export function WelcomeModal() {
             <div>
               <Badge variant="default" className="bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-md shadow-indigo-500/25">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                Limited Time Offer
+                Join Our Community
               </Badge>
             </div>
             <DialogTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">GameCode</span>
+              Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">Ready Game Code</span>
             </DialogTitle>
             <div className="text-muted-foreground text-sm leading-relaxed">
               <p className="text-foreground font-medium mb-1">
-                Exclusive offer: Save <span className="text-indigo-600 dark:text-indigo-400 font-bold">20%</span> on your first purchase.
+                The ultimate marketplace for game developers and creators.
               </p>
-              Use code <strong className="text-foreground bg-accent px-1.5 py-0.5 rounded">WELCOME20</strong> at checkout.
+              Discover high-quality game source codes, connect with top developers, and accelerate your game development journey.
             </div>
           </DialogHeader>
 
@@ -97,8 +97,8 @@ export function WelcomeModal() {
               asChild
               onClick={handleAction}
             >
-              <Link href="/products">
-                Explore Products <ArrowRight className="w-4 h-4 ml-2" />
+              <Link href="/register">
+                Create Free Account <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
             <Button 
@@ -107,8 +107,8 @@ export function WelcomeModal() {
               asChild
               onClick={handleAction}
             >
-              <Link href="/free-products">
-                View Free Items
+              <Link href="/login">
+                Already have an account? Sign In
               </Link>
             </Button>
           </div>
