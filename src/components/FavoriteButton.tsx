@@ -65,7 +65,7 @@ export function FavoriteButton({ productId, initialIsFavorited, className, size 
       onClick={toggleFavorite}
       disabled={loading}
       className={cn(
-        "rounded-full p-2 transition-colors hover:bg-muted/50",
+        "cursor-pointer rounded-full p-2 transition-colors hover:bg-muted/50",
         loading && "opacity-50 cursor-not-allowed",
         className
       )}

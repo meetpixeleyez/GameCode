@@ -37,6 +37,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.role === "ADMIN") {
+      return NextResponse.json(
+        { error: "Admin login is not allowed here. Please use the Admin portal." },
+        { status: 403 }
+      );
+    }
+
     if (user.status !== 1) {
       return NextResponse.json(
         { error: "Your account has been banned. Contact support." },

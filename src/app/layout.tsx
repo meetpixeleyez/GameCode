@@ -21,6 +21,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: {
     default: "Ready Game Code — Buy Unity Source Codes & Game Templates",
     template: "%s | Ready Game Code",
@@ -33,13 +34,9 @@ export const metadata: Metadata = {
     "buy unity source code",
     "unity 3d template",
     "android game code",
-    "car racing game source code",
-    "ready to publish unity game",
-    "unity game code",
-    "android game source code",
-    "IOS source code",
-    "buy action game source code",
-    "buy casual game source code",
+    "ios game code",
+    "reskin game",
+    "admob integration",
   ],
   authors: [{ name: "Ready Game Code" }],
   icons: {
@@ -52,12 +49,21 @@ export const metadata: Metadata = {
     url: "https://readygamecode.com",
     siteName: "Ready Game Code",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 800,
+        height: 600,
+        alt: "Ready Game Code Logo",
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
     title: "Ready Game Code — Unity Source Codes Marketplace",
     description:
       "Buy high-quality Unity, Android, and iOS game source codes at affordable prices.",
+    images: ["/logo.png"]
   },
   robots: {
     index: true,

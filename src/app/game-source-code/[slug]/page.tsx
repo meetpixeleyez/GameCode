@@ -139,6 +139,21 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     if (fav) isFavorited = true;
   }
 
+  // Check if user has purchased the item or if it's free
+  let hasPurchased = isAdmin || isAuthor || product.isFree === 1;
+  if (!hasPurchased && session?.sub) {
+    const purchaseCount = await db.orderItem.count({
+      where: {
+        productId: product.id,
+        userId: session.sub,
+        order: { paymentStatus: 1 },
+      },
+    });
+    if (purchaseCount > 0) {
+      hasPurchased = true;
+    }
+  }
+
   // Get more items by the same author
   const moreByAuthor = await db.product.findMany({
     where: {
@@ -256,7 +271,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 }}
               />
 
-              {/* Demo + APK */}
+              {/* Demo */}
               <div className="flex flex-wrap gap-3 mt-6">
                 {product.demoUrl && (
                   <Button asChild variant="outline">
@@ -270,12 +285,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     </a>
                   </Button>
                 )}
-                <Button asChild variant="outline">
-                  <Link href="#">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download APK
-                  </Link>
-                </Button>
               </div>
 
               {/* Video preview */}
@@ -307,6 +316,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     productId={product.id}
                     initialAvgRating={product.avgRating}
                     initialTotalReview={product.totalReview}
+                    userId={session?.sub}
                   />
                 </div>
 
@@ -315,7 +325,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 {/* Comments subsection */}
                 <div>
                   <h3 className="font-semibold text-lg mb-4">Comments</h3>
-                  <CommentsSection productId={product.id} />
+                  <CommentsSection productId={product.id} userId={session?.sub} />
                 </div>
               </div>
             </TabsContent>
@@ -367,6 +377,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 commercialBuyerFee: product.category.commercialBuyerFee,
                 twelveMonthExtendedFee: product.category.twelveMonthExtendedFee,
               } : null,
+              hasPurchased,
+              fileUrl: product.file,
             }}
           />
 

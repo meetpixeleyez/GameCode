@@ -296,7 +296,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                 {thumbnailFile ? (
                   <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
                     <img src={URL.createObjectURL(thumbnailFile)} alt="New Thumbnail" className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => setThumbnailFile(null)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => setThumbnailFile(null)} className="cursor-pointer absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                   </div>
                 ) : existingThumbnail ? (
                   <div className="relative w-24 h-24 border rounded-md overflow-hidden group">
@@ -322,7 +322,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                 {mainFile ? (
                   <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
                     <span className="text-sm truncate mr-4">{mainFile.name}</span>
-                    <button type="button" onClick={() => setMainFile(null)} className="text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => setMainFile(null)} className="cursor-pointer text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></button>
                   </div>
                 ) : existingMainFile ? (
                   <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
@@ -355,7 +355,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                   {existingScreenshots.map((url, idx) => (
                     <div key={`exist-${idx}`} className="relative w-24 h-24 border rounded-md overflow-hidden group">
                       <img src={url} alt="Screenshot" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeExistingScreenshot(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button type="button" onClick={() => removeExistingScreenshot(idx)} className="cursor-pointer absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-3 h-3" />
                       </button>
                     </div>
@@ -363,7 +363,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                   {screenshotsFiles.map((file, idx) => (
                     <div key={`new-${idx}`} className="relative w-24 h-24 border-2 border-primary border-dashed rounded-md overflow-hidden group">
                       <img src={URL.createObjectURL(file)} alt="New Screenshot" className="w-full h-full object-cover opacity-80" />
-                      <button type="button" onClick={() => setScreenshotsFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button type="button" onClick={() => setScreenshotsFiles(prev => prev.filter((_, i) => i !== idx))} className="cursor-pointer absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-3 h-3" />
                       </button>
                     </div>

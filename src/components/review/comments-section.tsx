@@ -24,26 +24,24 @@ interface Comment {
 
 interface CommentsSectionProps {
   productId: string;
+  userId?: string;
 }
 
-export function CommentsSection({ productId }: CommentsSectionProps) {
+export function CommentsSection({ productId, userId }: CommentsSectionProps) {
   const { toast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [authUser, setAuthUser] = useState<{ id: string } | null>(null);
+  const [authUser, setAuthUser] = useState<{ id: string } | null>(userId ? { id: userId } : null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/products/${productId}/comments`).then((r) => r.json()),
-      fetch("/api/auth/me").then((r) => r.json()),
-    ])
-      .then(([commentData, userData]) => {
+    fetch(`/api/products/${productId}/comments`)
+      .then((r) => r.json())
+      .then((commentData) => {
         if (commentData.comments) setComments(commentData.comments);
-        if (userData.user) setAuthUser({ id: userData.user.id });
       })
       .finally(() => setLoading(false));
   }, [productId]);
@@ -194,7 +192,7 @@ export function CommentsSection({ productId }: CommentsSectionProps) {
                 {authUser && (
                   <button
                     onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
-                    className="text-xs text-primary hover:underline mt-2"
+                    className="cursor-pointer text-xs text-primary hover:underline mt-2"
                   >
                     Reply
                   </button>

@@ -14,8 +14,11 @@ import {
   Shield,
   CheckCircle2,
   Eye,
+  Download,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductPurchaseProps {
   isAdmin?: boolean;
@@ -34,6 +37,8 @@ interface ProductPurchaseProps {
       commercialBuyerFee: number;
       twelveMonthExtendedFee: number;
     } | null;
+    hasPurchased?: boolean;
+    fileUrl?: string | null;
   };
 }
 
@@ -44,6 +49,18 @@ export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurc
   const [publish, setPublish] = useState(false);
   const [storeOpt, setStoreOpt] = useState(false);
   const { addToCart, loading, added } = useAddToCart();
+  const { toast } = useToast();
+
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    if (!product.hasPurchased) {
+      e.preventDefault();
+      toast({
+        title: "Access Denied",
+        description: "Please checkout this gamecode first, then you will be able to download the APK.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const basePrice = license === "1" ? product.price : product.priceCl;
   const extendedAmount = isExtended ? product.category?.twelveMonthExtendedFee || 0 : 0;
@@ -235,6 +252,27 @@ export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurc
           >
             <Eye className="mr-2 h-4 w-4" />
             Live Preview
+          </a>
+        </Button>
+
+        <Button 
+          variant={product.hasPurchased ? "default" : "outline"} 
+          className="w-full" 
+          size="lg" 
+          asChild
+          onClick={handleDownloadClick}
+        >
+          <a
+            href={product.hasPurchased ? (product.fileUrl || "#") : "#"}
+            target={product.hasPurchased ? "_blank" : undefined}
+            download={product.hasPurchased}
+          >
+            {product.hasPurchased ? (
+              <Download className="mr-2 h-4 w-4" />
+            ) : (
+              <Lock className="mr-2 h-4 w-4 text-muted-foreground" />
+            )}
+            Download APK
           </a>
         </Button>
 

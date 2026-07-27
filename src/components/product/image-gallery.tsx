@@ -59,7 +59,7 @@ export function ImageGallery({ images, youtubeEmbedUrl, productTitle }: ImageGal
               type="button"
               onClick={() => setActiveIndex(idx)}
               className={cn(
-                "relative flex-shrink-0 w-24 h-16 md:w-32 md:h-20 rounded-md overflow-hidden border-2 transition-all",
+                "cursor-pointer relative flex-shrink-0 w-24 h-16 md:w-32 md:h-20 rounded-md overflow-hidden border-2 transition-all",
                 activeIndex === idx ? "border-primary ring-2 ring-primary/20" : "border-transparent opacity-70 hover:opacity-100"
               )}
             >

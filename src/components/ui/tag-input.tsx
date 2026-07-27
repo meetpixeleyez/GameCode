@@ -48,7 +48,7 @@ export const TagInput = React.forwardRef<HTMLInputElement, TagInputProps>(
             {tag}
             <button
               type="button"
-              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              className="cursor-pointer rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-destructive hover:text-destructive-foreground transition-colors"
               onClick={() => removeTag(tag)}
             >
               <X className="h-3 w-3" />

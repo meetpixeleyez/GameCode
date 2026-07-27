@@ -96,7 +96,7 @@ export default function PasswordResetVerifyPage({ params }: { params: Promise<{ 
             />
             <button
               type="button"
-              className="absolute right-3 top-8 text-muted-foreground hover:text-foreground"
+              className="cursor-pointer absolute right-3 top-8 text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

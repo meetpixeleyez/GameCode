@@ -27,12 +27,14 @@ interface ReviewsSectionProps {
   productId: string;
   initialAvgRating: number;
   initialTotalReview: number;
+  userId?: string;
 }
 
 export function ReviewsSection({
   productId,
   initialAvgRating,
   initialTotalReview,
+  userId,
 }: ReviewsSectionProps) {
   const { toast } = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -42,16 +44,13 @@ export function ReviewsSection({
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
-  const [authUser, setAuthUser] = useState<{ id: string } | null>(null);
+  const [authUser, setAuthUser] = useState<{ id: string } | null>(userId ? { id: userId } : null);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/products/${productId}/reviews`).then((r) => r.json()),
-      fetch("/api/auth/me").then((r) => r.json()),
-    ])
-      .then(([reviewData, userData]) => {
+    fetch(`/api/products/${productId}/reviews`)
+      .then((r) => r.json())
+      .then((reviewData) => {
         if (reviewData.reviews) setReviews(reviewData.reviews);
-        if (userData.user) setAuthUser({ id: userData.user.id });
       })
       .finally(() => setLoading(false));
   }, [productId]);
@@ -151,7 +150,7 @@ export function ReviewsSection({
                   onClick={() => setRating(i)}
                   onMouseEnter={() => setHoverRating(i)}
                   onMouseLeave={() => setHoverRating(0)}
-                  className="p-1"
+                  className="cursor-pointer p-1"
                   aria-label={`${i} stars`}
                 >
                   <Star

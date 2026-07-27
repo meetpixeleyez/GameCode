@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Phone, MessageCircle, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
 
 const quickLinks = [
@@ -27,18 +28,22 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto bg-secondary/50 border-t border-border">
+    <footer className="mt-auto bg-black text-white border-t border-white/10">
       <div className="container mx-auto py-12 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">R</span>
-              </div>
-              <span className="font-bold text-lg">Ready Game Code</span>
+            <Link href="/" className="flex items-center shrink-0 mb-4">
+              <Image 
+                src="/logo_dark.png" 
+                alt="Ready Game Code" 
+                width={200} 
+                height={66} 
+                className="h-12 w-auto object-contain"
+                priority
+              />
             </Link>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-white/60">
               Premium Unity game source codes marketplace. Buy, sell, and download
               ready-to-publish game templates.
             </p>
@@ -46,13 +51,13 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">Quick Link</h4>
+            <h4 className="font-semibold text-sm mb-4 text-white">Quick Link</h4>
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-white/60 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -61,15 +66,15 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Policy Pages */}
+          {/* Policy Page */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">Policy Page</h4>
+            <h4 className="font-semibold text-sm mb-4 text-white">Policy Page</h4>
             <ul className="space-y-2">
               {policyLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    className="text-sm text-white/60 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -78,32 +83,32 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Get In Touch */}
+          {/* Contact */}
           <div>
-            <h4 className="font-semibold text-sm mb-4">Get In Touch</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold text-sm mb-4 text-white">Get In Touch</h4>
+            <ul className="space-y-4">
               <li>
-                <a
-                  href="mailto:info@readygamecode.com"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                <a 
+                  href="mailto:info@readygamecode.com" 
+                  className="flex items-center gap-2 text-sm text-white/60 hover:text-primary transition-colors"
                 >
                   <Mail className="h-4 w-4" />
                   info@readygamecode.com
                 </a>
               </li>
               <li>
-                <a
-                  href="tel:+919408212310"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                <a 
+                  href="tel:+919408212310" 
+                  className="flex items-center gap-2 text-sm text-white/60 hover:text-primary transition-colors"
                 >
                   <Phone className="h-4 w-4" />
                   +91 9408212310
                 </a>
               </li>
               <li>
-                <a
-                  href="https://wa.me/919408212310"
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                <a 
+                  href="https://api.whatsapp.com/send?phone=919408212310&text=%F0%9F%91%8B%20Hey%20Ready%20Game%20Code,%20can%20you%20help%20me%20with" 
+                  className="flex items-center gap-2 text-sm text-white/60 hover:text-primary transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -120,7 +125,7 @@ export function Footer() {
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-white/60 hover:text-primary transition-colors"
                   >
                     <Icon className="h-5 w-5" />
                   </a>
@@ -130,7 +135,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+        {/* Bottom Bar */}
+        <div className="mt-8 pt-8 border-t border-white/10 text-center text-sm text-white/60">
           © {new Date().getFullYear()} Ready Game Code. All rights reserved.
         </div>
       </div>

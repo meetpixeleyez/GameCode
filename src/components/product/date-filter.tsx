@@ -44,7 +44,7 @@ export function DateFilter({ counts }: DateFilterProps) {
           <button
             key={option.value}
             onClick={() => handleSelect(option.value)}
-            className={`
+            className={`cursor-pointer
               relative flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg border transition-all duration-200
               ${isActive 
                 ? "bg-primary/10 border-primary text-primary font-medium" 
