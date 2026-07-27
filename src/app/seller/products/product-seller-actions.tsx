@@ -153,7 +153,7 @@ export function ProductSellerActions({ productId, slug, status }: ProductSellerA
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 border-transparent"
             >
               {isDeleting ? "Deleting..." : "Delete Product"}
             </AlertDialogAction>

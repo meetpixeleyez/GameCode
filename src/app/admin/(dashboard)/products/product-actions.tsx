@@ -291,7 +291,7 @@ export function ProductActions({ productId, currentStatus, isFeatured = 0 }: { p
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 border-transparent">
               Yes, Delete
             </AlertDialogAction>
           </AlertDialogFooter>
