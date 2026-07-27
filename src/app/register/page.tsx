@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, Suspense } from "react";
+import { useState, FormEvent, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, User, Store } from "lucide-react";
 
@@ -21,6 +22,13 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const [step, setStep] = useState<1 | 2>(1);
+  const [otp, setOtp] = useState("");
+  const [registrationToken, setRegistrationToken] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [resending, setResending] = useState(false);
   const [form, setForm] = useState({
     firstname: "",
     lastname: "",
@@ -64,13 +72,22 @@ function RegisterForm() {
         return;
       }
 
-      toast({
-        title: "Welcome to Ready Game Code!",
-        description: "Your account has been created successfully.",
-      });
-
-      router.push("/dashboard");
-      router.refresh();
+      if (data.requiresOTP) {
+        setRegistrationToken(data.registrationToken);
+        setStep(2);
+        setTimeLeft(15 * 60);
+        toast({
+          title: "Check your email",
+          description: "A 6-digit verification code has been sent to your email address.",
+        });
+      } else {
+        toast({
+          title: "Welcome to Ready Game Code!",
+          description: "Your account has been created successfully.",
+        });
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch (err) {
       toast({
         title: "Network error",
@@ -82,9 +99,75 @@ function RegisterForm() {
     }
   }
 
+  useEffect(() => {
+    if (step === 2 && timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    }
+  }, [step, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  async function handleResendOTP() {
+    if (resending) return;
+    setResending(true);
+    try {
+      const res = await fetch("/api/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, registrationToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Failed to resend", description: data.error, variant: "destructive" });
+        return;
+      }
+      setRegistrationToken(data.registrationToken);
+      toast({ title: "OTP Sent", description: "A new OTP has been sent to your email." });
+      setTimeLeft(15 * 60);
+    } catch (err) {
+      toast({ title: "Network error", description: "Could not reach the server.", variant: "destructive" });
+    } finally {
+      setResending(false);
+    }
+  }
+
+  async function handleVerifyOTP(e: FormEvent) {
+    e.preventDefault();
+    setVerifying(true);
+
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, otp, registrationToken }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Verification failed", description: data.error, variant: "destructive" });
+        return;
+      }
+      
+      toast({ title: "Welcome to Ready Game Code!", description: "Your email has been verified." });
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      toast({ title: "Network error", description: "Could not reach the server.", variant: "destructive" });
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-md mx-auto">
+        {step === 1 ? (
+        <>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">Sign Up to Ready Game Code</h1>
           <p className="text-muted-foreground mt-2">
@@ -284,6 +367,74 @@ function RegisterForm() {
             Sign In
           </Link>
         </p>
+        </>
+        ) : (
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold">Enter OTP</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                We&apos;ve sent a 6-digit verification code to <strong>{form.email}</strong>.
+              </p>
+            </div>
+            
+            <div className="space-y-4 flex flex-col items-center">
+              <Label htmlFor="otp">Verification Code</Label>
+              <InputOTP 
+                maxLength={6} 
+                value={otp} 
+                onChange={(val) => setOtp(val)} 
+                containerClassName="justify-center mt-2"
+              >
+                <InputOTPGroup className="gap-2">
+                  <InputOTPSlot index={0} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                  <InputOTPSlot index={1} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                  <InputOTPSlot index={2} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                  <InputOTPSlot index={3} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                  <InputOTPSlot index={4} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                  <InputOTPSlot index={5} className="w-12 h-14 text-2xl font-bold rounded-md border" />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground mt-4">
+              {timeLeft > 0 ? (
+                <p>OTP is valid for <span className="font-medium text-primary">{formatTime(timeLeft)}</span></p>
+              ) : (
+                <p className="text-destructive">OTP has expired</p>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full" size="lg" disabled={verifying || otp.length !== 6 || timeLeft === 0}>
+              {verifying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify OTP"
+              )}
+            </Button>
+            
+            <div className="flex flex-col gap-4 text-center">
+              <button
+                type="button"
+                onClick={handleResendOTP}
+                disabled={resending || timeLeft > 14 * 60} // prevent spamming within first minute
+                className="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:hover:no-underline transition-colors"
+              >
+                {resending ? "Resending..." : "Resend OTP"}
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => setStep(1)} 
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Change email address
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

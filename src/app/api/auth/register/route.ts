@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { setAuthCookies } from "@/lib/auth";
 import { transferGuestCartToUser } from "@/lib/cart-session";
+import { sendMail } from "@/lib/mail";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { SignJWT } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "dev-secret-change-in-production-min-32-chars"
+);
 
 const registerSchema = z
   .object({
@@ -71,42 +77,55 @@ export async function POST(req: NextRequest) {
       if (referrer) referrerUserId = referrer.id;
     }
 
-    const user = await db.user.create({
-      data: {
-        email,
-        firstname,
-        lastname,
-        username,
-        password: hashedPassword,
-        status: 1,
-        profileComplete: 0, // user must complete profile on first login
-        isAuthor: role === "seller" ? 1 : 0,
-      },
-    });
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Issue JWT tokens
-    await setAuthCookies({
-      sub: user.id,
-      email: user.email,
-      role: "user",
-      username: user.username,
-    });
+    // Create a temporary stateless token with the registration data and OTP
+    const payload = {
+      email,
+      firstname,
+      lastname,
+      username,
+      password: hashedPassword,
+      role: role === "seller" ? 1 : 0,
+      otp,
+    };
 
-    // Transfer guest cart items to this user (if any)
-    const guestSession = req.cookies.get("rgc_guest_session")?.value;
-    if (guestSession) {
-      await transferGuestCartToUser(user.id, guestSession);
+    const registrationToken = await new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("15m")
+      .sign(JWT_SECRET);
+
+    // Send OTP via email
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-w-md; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+          <h2 style="color: #333;">Verify your email address</h2>
+          <p>Hello ${firstname},</p>
+          <p>Thank you for registering at Ready Game Code. Please use the following 6-digit code to verify your email address:</p>
+          <div style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #FF7A00; padding: 15px; text-align: center; background: #f9f9f9; border-radius: 5px; margin: 20px 0;">
+            ${otp}
+          </div>
+          <p style="margin-top: 25px; font-size: 13px; color: #777;">This code is valid for a limited time. If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `;
+
+      await sendMail({
+        to: email,
+        subject: "Your OTP for Ready Game Code",
+        html: emailHtml,
+      });
     }
 
     return NextResponse.json(
       {
         success: true,
+        requiresOTP: true,
+        message: "OTP sent to your email",
+        registrationToken,
         user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          firstname: user.firstname,
-          lastname: user.lastname,
+          email,
         },
       },
       { status: 201 }

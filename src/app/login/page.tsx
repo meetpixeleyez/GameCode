@@ -174,9 +174,6 @@ function LoginForm() {
                 Remember Me
               </Label>
             </div>
-            <Link href="/password-reset" className="text-sm text-primary hover:underline">
-              Forgot Password?
-            </Link>
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
