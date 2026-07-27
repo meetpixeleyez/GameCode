@@ -78,7 +78,6 @@ export async function POST(req: NextRequest) {
         lastname,
         username,
         password: hashedPassword,
-        refBy: referrerUserId,
         status: 1,
         profileComplete: 0, // user must complete profile on first login
         isAuthor: role === "seller" ? 1 : 0,
