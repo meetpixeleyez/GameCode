@@ -37,7 +37,17 @@ export function ProductSellerActions({ productId, slug, status }: ProductSellerA
       });
 
       if (!res.ok) {
-        throw new Error("Failed to delete product");
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 400) {
+          toast({
+            title: "Notice",
+            description: data.error || "Cannot perform this action.",
+          });
+          return;
+        }
+
+        throw new Error(data.error || "Failed to delete product");
       }
 
       toast({
@@ -46,10 +56,10 @@ export function ProductSellerActions({ productId, slug, status }: ProductSellerA
       });
 
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Could not delete product.",
+        description: error.message || "Could not delete product.",
         variant: "destructive",
       });
     } finally {

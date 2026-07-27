@@ -149,6 +149,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     try {
+      // Check if product has associated orders to avoid terminal error spam
+      const orderCount = await db.orderItem.count({ where: { productId: id } });
+      if (orderCount > 0) {
+        return NextResponse.json({ error: "Cannot delete product. It has existing orders attached to it. Please take it down instead." }, { status: 400 });
+      }
+
       await db.product.delete({ where: { id } });
       
       // Auto File Deletion Logic for Deleted Product
@@ -169,8 +175,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       }
       
     } catch (dbError: any) {
-      if (dbError.code === "P2003") {
-        return NextResponse.json({ error: "Cannot delete product. It has existing orders or related records. Please take it down instead." }, { status: 400 });
+      if (dbError.code === "P2003" || (dbError.message && dbError.message.includes("foreign key constraint"))) {
+        return NextResponse.json({ error: "Cannot delete product. It has existing orders attached to it. Please take it down instead." }, { status: 400 });
       }
       throw dbError;
     }

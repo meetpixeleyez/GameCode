@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { JwtPayload } from "@/lib/auth";
 import { SearchBar } from "@/components/SearchBar";
@@ -84,15 +85,15 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
       <div className="container mx-auto">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">R</span>
-              </div>
-              <span className="font-bold text-lg tracking-tight">
-                Ready Game Code
-              </span>
-            </div>
+          <Link href="/" className="flex items-center shrink-0">
+            <Image 
+              src="/logo.png" 
+              alt="Ready Game Code" 
+              width={180} 
+              height={60} 
+              className="h-10 w-auto object-contain"
+              priority
+            />
           </Link>
 
           {/* Desktop nav */}

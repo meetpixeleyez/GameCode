@@ -5,15 +5,12 @@ import Link from "next/link";
 
 export function ChatWidgets() {
   useEffect(() => {
-    // Tawk.to integration script
-    // TODO: Replace 'YOUR_PROPERTY_ID' with the actual ID from Tawk.to dashboard
-    const propertyId = "YOUR_PROPERTY_ID"; // Change this!
-    const widgetId = "default"; // Change this if you have a specific widget ID
+    // Initialize Tawk.to window variables
+    (window as any).Tawk_API = (window as any).Tawk_API || {};
+    (window as any).Tawk_LoadStart = new Date();
 
-    // If propertyId is YOUR_PROPERTY_ID, Tawk.to won't load properly until you change it.
-    if (propertyId === "YOUR_PROPERTY_ID") {
-      console.warn("Tawk.to Property ID is not set. Please update it in src/components/chat-widgets.tsx");
-    }
+    const propertyId = "6a66eeb59b421a1d42846db7";
+    const widgetId = "1juh18u83";
 
     const script = document.createElement("script");
     script.async = true;
@@ -29,7 +26,7 @@ export function ChatWidgets() {
     }
 
     return () => {
-      // Optional: Cleanup if the component unmounts (rare for global layout)
+      // Optional: Cleanup if the component unmounts
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }

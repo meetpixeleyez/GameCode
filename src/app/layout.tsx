@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCartContext } from "@/lib/cart-session";
 import { db } from "@/lib/db";
 import { ChatWidgets } from "@/components/chat-widgets";
+import { WelcomeModal } from "@/components/welcome-modal";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -91,6 +92,7 @@ export default async function RootLayout({
         <Footer />
         <ChatWidgets />
         <Toaster />
+        <WelcomeModal />
       </body>
     </html>
   );

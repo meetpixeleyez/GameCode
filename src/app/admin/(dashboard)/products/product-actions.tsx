@@ -99,17 +99,29 @@ export function ProductActions({ productId, currentStatus, isFeatured = 0 }: { p
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        
+        if (res.status === 400) {
+          toast({
+            title: "Notice",
+            description: data.error || "Cannot perform this action.",
+          });
+          return;
+        }
+
+        throw new Error(data.error || "Failed to delete");
+      }
 
       toast({
         title: "Success",
         description: "Product has been deleted permanently.",
       });
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Could not delete product.",
+        description: error.message || "Could not delete product.",
         variant: "destructive",
       });
     } finally {
