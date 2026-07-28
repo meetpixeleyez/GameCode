@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
+import { AuthorProductsSection } from "@/components/product/author-products-section";
 import { ProductPurchaseSidebar } from "@/components/product/product-purchase-sidebar";
 import { ImageGallery } from "@/components/product/image-gallery";
 import { ReviewsSection } from "@/components/review/reviews-section";
@@ -144,13 +145,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     if (fav) isFavorited = true;
   }
 
-  // Check if user has purchased the item or if it's free
+  // Check if user has purchased the item or if it's free (and not refunded / refund pending)
   let hasPurchased = isAdmin || isAuthor || product.isFree === 1;
   if (!hasPurchased && session?.sub) {
     const purchaseCount = await db.orderItem.count({
       where: {
         productId: product.id,
         userId: session.sub,
+        isRefunded: 0,
+        refundRequests: {
+          none: {
+            status: { in: [0, 1] }, // Exclude pending (0) or approved (1) refund requests
+          },
+        },
         order: { paymentStatus: 1 },
       },
     });
@@ -166,8 +173,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       status: 1,
       id: { not: product.id },
     },
-    include: { user: true },
-    take: 8,
+    include: {
+      user: true,
+      campaignProducts: {
+        include: { campaign: true },
+      },
+    },
+    take: 24,
     orderBy: { totalSold: "desc" },
   });
 
@@ -446,7 +458,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 twelveMonthExtendedFee: product.category.twelveMonthExtendedFee,
               } : null,
               hasPurchased,
-              fileUrl: product.file,
+              fileUrl: `/api/download/${product.id}`,
             }}
           />
 
@@ -513,19 +525,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {/* More items by author */}
-      {moreByAuthor.length > 0 && (
-        <section className="mt-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">More items by {authorName}</h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {moreByAuthor.slice(0, 4).map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* More items by author with pagination */}
+      <AuthorProductsSection
+        authorName={authorName}
+        products={moreByAuthor}
+        isAdmin={session?.role === "admin"}
+      />
     </div>
   );
 }

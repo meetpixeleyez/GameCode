@@ -168,26 +168,33 @@ export default async function PurchasesPage({ searchParams }: PurchasesPageProps
                           ${item.productPrice.toFixed(2)}
                         </div>
                         <div className="flex flex-col gap-2 mt-2">
-                          <Button size="sm" variant="outline" asChild>
-                            <Link href="/dashboard/downloads">
-                              <Download className="h-3.5 w-3.5 mr-1" />
-                              Download
-                            </Link>
-                          </Button>
                           {item.isRefunded === 1 ? (
-                            <Badge variant="destructive" className="justify-center">Refunded</Badge>
+                            <Badge variant="destructive" className="justify-center py-1">Access Revoked (Refunded)</Badge>
                           ) : item.refundRequests.length > 0 ? (
-                            <Button size="sm" variant="secondary" asChild>
-                              <Link href={`/dashboard/refunds/${item.refundRequests[0].id}`}>
-                                View Dispute
-                              </Link>
-                            </Button>
+                            <>
+                              <Badge variant="outline" className="justify-center text-amber-600 border-amber-500/30 bg-amber-500/10 text-[11px]">
+                                Download Disabled (Refund Pending)
+                              </Badge>
+                              <Button size="sm" variant="secondary" asChild>
+                                <Link href={`/dashboard/refunds/${item.refundRequests[0].id}`}>
+                                  View Dispute
+                                </Link>
+                              </Button>
+                            </>
                           ) : (
-                            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" asChild>
-                              <Link href={`/dashboard/refunds/new?item=${item.id}`}>
-                                Request Refund
-                              </Link>
-                            </Button>
+                            <>
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={`/api/download/${item.product.id}`} download>
+                                  <Download className="h-3.5 w-3.5 mr-1" />
+                                  Download
+                                </a>
+                              </Button>
+                              <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive text-xs" asChild>
+                                <Link href={`/dashboard/refunds/new?item=${item.id}`}>
+                                  Request Refund
+                                </Link>
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>

@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from "react";
 export type NotificationCounts = {
   seller: { refunds: number; support: number; total: number };
   buyer: { refunds: number; support: number; total: number };
+  admin: { refunds: number; support: number; pendingProducts: number; withdrawals: number; total: number };
 };
 
 const defaultCounts: NotificationCounts = {
   seller: { refunds: 0, support: 0, total: 0 },
   buyer: { refunds: 0, support: 0, total: 0 },
+  admin: { refunds: 0, support: 0, pendingProducts: 0, withdrawals: 0, total: 0 },
 };
 
 export function useNotifications() {

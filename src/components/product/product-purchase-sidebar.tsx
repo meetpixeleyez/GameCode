@@ -56,7 +56,7 @@ export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurc
       e.preventDefault();
       toast({
         title: "Access Denied",
-        description: "Please checkout this gamecode first, then you will be able to download the APK.",
+        description: "Download access is disabled or revoked for refunded items. Please purchase to gain access.",
         variant: "destructive",
       });
     }

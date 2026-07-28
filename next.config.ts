@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     unoptimized: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "500mb",
+    },
+  },
 };
 
 export default nextConfig;

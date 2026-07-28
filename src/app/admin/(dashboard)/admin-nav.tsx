@@ -18,6 +18,9 @@ import {
   DollarSign,
 } from "lucide-react";
 
+import { useNotifications } from "@/hooks/use-notifications";
+import { Badge } from "@/components/ui/badge";
+
 export const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
@@ -33,6 +36,7 @@ export const adminNavItems = [
 
 export function AdminNav() {
   const pathname = usePathname();
+  const { admin } = useNotifications();
   
   return (
     <nav className="rounded-lg border border-border bg-card overflow-hidden flex flex-col">
@@ -41,19 +45,36 @@ export function AdminNav() {
           ? pathname === "/admin" 
           : pathname.startsWith(item.href);
           
+        let badgeCount = 0;
+        if (item.href === "/admin/refunds") badgeCount = admin?.refunds || 0;
+        if (item.href === "/admin/support") badgeCount = admin?.support || 0;
+        if (item.href === "/admin/products") badgeCount = admin?.pendingProducts || 0;
+        if (item.href === "/admin/withdrawals") badgeCount = admin?.withdrawals || 0;
+
         return (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors border-b border-border last:border-0",
+              "flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors border-b border-border last:border-0",
               isActive 
                 ? "bg-primary text-primary-foreground" 
                 : "hover:bg-muted text-muted-foreground"
             )}
           >
-            <item.icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
-            {item.label}
+            <div className="flex items-center gap-3">
+              <item.icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+              {item.label}
+            </div>
+
+            {badgeCount > 0 && (
+              <Badge
+                variant={isActive ? "secondary" : item.href === "/admin/refunds" ? "destructive" : "default"}
+                className="px-1.5 py-0 min-w-5 h-5 flex items-center justify-center text-[10px] shadow-xs font-bold"
+              >
+                {badgeCount}
+              </Badge>
+            )}
           </Link>
         );
       })}

@@ -16,7 +16,12 @@ export default async function AdminRefundsPage() {
   }
 
   const refunds = await db.refundRequest.findMany({
-    where: { userId: session.sub },
+    where: {
+      OR: [
+        { userId: session.sub },
+        { status: 0 },
+      ],
+    },
     include: {
       orderItem: {
         include: { product: true, user: true },

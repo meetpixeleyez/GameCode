@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
   productId: string;
-  initialIsFavorited: boolean;
+  initialIsFavorited?: boolean;
   className?: string;
   size?: number;
 }
 
-export function FavoriteButton({ productId, initialIsFavorited, className, size = 20 }: FavoriteButtonProps) {
+export function FavoriteButton({ productId, initialIsFavorited = false, className, size = 20 }: FavoriteButtonProps) {
   const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();

@@ -4,11 +4,14 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Session expired or unauthorized. Please log in again." }, { status: 401 });
     }
 
     const formData = await req.formData();
@@ -59,10 +62,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, files: uploadedFiles });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error?.message || "File upload failed on server" },
       { status: 500 }
     );
   }

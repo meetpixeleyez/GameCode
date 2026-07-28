@@ -16,7 +16,13 @@ export default async function DownloadsPage() {
   const orderItems = await db.orderItem.findMany({
     where: {
       userId: session.sub,
+      isRefunded: 0,
       order: { paymentStatus: 1 },
+      refundRequests: {
+        none: {
+          status: { in: [0, 1] }, // Exclude pending (0) or approved (1) refund requests
+        },
+      },
     },
     include: {
       product: {
@@ -108,7 +114,7 @@ export default async function DownloadsPage() {
 
                   <div className="flex gap-2 pt-1">
                     <Button size="sm" variant="default" asChild>
-                      <a href={item.product.file || "#"} download target="_blank">
+                      <a href={`/api/download/${item.product.id}`} download>
                         <Download className="h-3.5 w-3.5 mr-1" />
                         Download
                       </a>

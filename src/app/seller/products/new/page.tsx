@@ -70,11 +70,11 @@ export default function NewProductPage() {
       body: formData,
     });
     
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error("File upload failed");
+      throw new Error(data.error || `File upload failed (${res.status})`);
     }
     
-    const data = await res.json();
     return data.files;
   }
 

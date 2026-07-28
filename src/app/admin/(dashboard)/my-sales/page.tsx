@@ -48,11 +48,11 @@ export default async function AdminMySalesPage() {
     db.product.count({ where: { userId } }),
   ]);
 
-  const totalSalesCount = orderItems.length;
-  const totalEarnedAmount = orderItems.reduce(
-    (sum, item) => sum + (item.sellerEarning || item.productPrice),
-    0
-  );
+  const activeOrderItems = orderItems.filter((item) => item.isRefunded === 0);
+  const totalSalesCount = user?.totalSold !== undefined ? user.totalSold : activeOrderItems.length;
+  const totalEarnedAmount = user?.totalSoldAmount !== undefined
+    ? user.totalSoldAmount
+    : activeOrderItems.reduce((sum, item) => sum + (item.sellerEarning || item.productPrice), 0);
 
   const remarkLabels: Record<string, string> = {
     new_sale: "Product Sale",
@@ -61,6 +61,8 @@ export default async function AdminMySalesPage() {
     purchase: "Item Purchased",
     balance_add: "Balance Added",
     withdrawal: "Withdrawal",
+    refund_debit: "Refund Debit",
+    refund_credit: "Refund Credit",
   };
 
   return (
@@ -179,12 +181,32 @@ export default async function AdminMySalesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-xs">
-                          {item.license === 2 ? "Commercial" : "Personal"}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-xs">
+                            {item.license === 2 ? "Commercial" : "Personal"}
+                          </Badge>
+                          {item.isRefunded === 1 && (
+                            <Badge variant="destructive" className="text-[10px] bg-red-500/10 text-red-600 border-red-500/30">
+                              Refunded
+                            </Badge>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">
-                        {formatCurrency(item.sellerEarning || item.productPrice)}
+                      <td className="px-4 py-3 font-semibold">
+                        {item.isRefunded === 1 ? (
+                          <div className="flex flex-col">
+                            <span className="line-through text-muted-foreground text-xs font-normal">
+                              {formatCurrency(item.sellerEarning || item.productPrice)}
+                            </span>
+                            <span className="text-red-500 text-xs font-medium">
+                              $0.00 (Refunded)
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(item.sellerEarning || item.productPrice)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground text-right">
                         {new Date(item.createdAt).toLocaleDateString()}

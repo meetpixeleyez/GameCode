@@ -85,11 +85,19 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      await tx.adminNotification.create({
+        data: {
+          title: `Refund request submitted for ${orderItem.product.title}`,
+          clickUrl: `/admin/refunds/${rr.id}`,
+          isRead: 0,
+        },
+      });
+
       return rr;
     });
 
-    // Notify seller via SSE
-    broadcastNotification(orderItem.product.userId);
+    // Notify seller & admin via SSE
+    broadcastNotification("all");
 
     return NextResponse.json({ success: true, refundRequestId: refundRequest.id });
   } catch (error) {

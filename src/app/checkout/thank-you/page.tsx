@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Download, ArrowRight, Mail } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -132,10 +133,16 @@ export default async function ThankYouPage({ searchParams }: ThankYouPageProps) 
                     </code>
                   </p>
                 </div>
-                <Button size="sm" variant="outline">
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
+                {item.isRefunded === 1 ? (
+                  <Badge variant="destructive">Refunded</Badge>
+                ) : (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={`/api/download/${item.product.id}`} download>
+                      <Download className="h-4 w-4 mr-1" />
+                      Download
+                    </a>
+                  </Button>
+                )}
               </div>
             ))}
           </div>

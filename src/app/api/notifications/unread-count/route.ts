@@ -31,6 +31,43 @@ export async function GET(req: NextRequest) {
       _sum: { buyerUnreadCount: true },
     });
 
+    // Calculate admin unread/pending counts if user is an admin
+    let adminCounts = { refunds: 0, support: 0, pendingProducts: 0, withdrawals: 0, total: 0 };
+    if (user.role === "ADMIN" || user.role === "admin") {
+      const [adminRefunds, adminSupport, adminPendingProducts, adminWithdrawals] = await Promise.all([
+        db.refundRequest.count({
+          where: {
+            OR: [
+              { userId: userId, sellerUnreadCount: { gt: 0 } },
+              { status: 0 },
+            ],
+          },
+        }),
+        db.supportTicket.count({
+          where: {
+            OR: [
+              { ticketType: "ADMIN", status: { in: [0, 2] } },
+              { sellerId: userId, sellerUnreadCount: { gt: 0 } },
+            ],
+          },
+        }),
+        db.product.count({
+          where: { status: 0 },
+        }),
+        db.withdrawal.count({
+          where: { status: 0 },
+        }),
+      ]);
+
+      adminCounts = {
+        refunds: adminRefunds,
+        support: adminSupport,
+        pendingProducts: adminPendingProducts,
+        withdrawals: adminWithdrawals,
+        total: adminRefunds + adminSupport + adminPendingProducts + adminWithdrawals,
+      };
+    }
+
     return NextResponse.json({
       seller: {
         refunds: sellerRefunds._sum.sellerUnreadCount || 0,
@@ -42,6 +79,7 @@ export async function GET(req: NextRequest) {
         support: buyerTickets._sum.buyerUnreadCount || 0,
         total: (buyerRefunds._sum.buyerUnreadCount || 0) + (buyerTickets._sum.buyerUnreadCount || 0),
       },
+      admin: adminCounts,
     });
   } catch (error) {
     console.error("Fetch unread counts error:", error);

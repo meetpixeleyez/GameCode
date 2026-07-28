@@ -54,6 +54,8 @@ export default async function EarningsPage() {
     purchase: "Purchase",
     balance_add: "Balance Added",
     withdrawal: "Withdrawal",
+    refund_debit: "Refund Debit",
+    refund_credit: "Refund Credit",
   };
 
   return (
@@ -177,15 +179,33 @@ export default async function EarningsPage() {
                       {item.reskinSelected === 1 && <span>· Reskin</span>}
                       {item.publishSelected === 1 && <span>· Publish</span>}
                       {item.storeOptimizationSelected === 1 && <span>· Store Opt</span>}
+                      {item.isRefunded === 1 && (
+                        <Badge variant="destructive" className="text-[10px] bg-red-500/10 text-red-600 border-red-500/30">
+                          Refunded
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-bold text-primary text-sm">
-                      +${item.sellerEarning.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      ${item.productPrice.toFixed(2)} - ${item.sellerFee.toFixed(2)} fee
-                    </div>
+                    {item.isRefunded === 1 ? (
+                      <div>
+                        <div className="font-bold text-muted-foreground text-sm line-through">
+                          +${item.sellerEarning.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-red-500 font-semibold">
+                          $0.00 (Refunded)
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-bold text-primary text-sm">
+                          +${item.sellerEarning.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ${item.productPrice.toFixed(2)} - ${item.sellerFee.toFixed(2)} fee
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

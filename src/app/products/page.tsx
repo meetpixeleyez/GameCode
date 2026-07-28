@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceFilter } from "@/components/product/price-filter";
 import { DateFilter } from "@/components/product/date-filter";
+import { SubCategoryFilter } from "@/components/product/subcategory-filter";
 import { ProductPagination } from "@/components/product/product-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -245,33 +246,16 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
           {/* SubCategory filter - Only show if category is selected and has subcategories */}
           {categoryFilter && subCategories.length > 0 && (
-            <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="font-semibold text-sm mb-3">Sub-Category</h3>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href={buildUrl({ search, sort_by: sortBy, category: categoryFilter, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
-                    className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
-                      !subCategoryFilter ? "bg-accent font-medium" : "text-muted-foreground"
-                    }`}
-                  >
-                    All Sub-Categories
-                  </Link>
-                </li>
-                {subCategories.map((sub) => (
-                  <li key={sub.id}>
-                    <Link
-                      href={buildUrl({ search, sort_by: sortBy, category: categoryFilter, sub_category: sub.id, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
-                      className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
-                        subCategoryFilter === sub.id ? "bg-accent font-medium" : "text-muted-foreground"
-                      }`}
-                    >
-                      {sub.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <SubCategoryFilter
+              subCategories={subCategories}
+              categoryFilter={categoryFilter}
+              subCategoryFilter={subCategoryFilter}
+              search={search}
+              sortBy={sortBy}
+              minPrice={sp.min_price}
+              maxPrice={sp.max_price}
+              featured={sp.featured}
+            />
           )}
 
           {/* Date filter */}

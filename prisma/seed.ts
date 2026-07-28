@@ -71,27 +71,30 @@ async function main() {
 
   // 4. Admin + Reviewer + Seller
   const adminPassword = await bcrypt.hash("admin123", 10);
-  await db.admin.upsert({
+  await db.user.upsert({
     where: { email: "admin@readygamecode.com" },
-    update: {},
+    update: { role: "ADMIN" },
     create: {
-      name: "Super Admin",
+      firstname: "Super",
+      lastname: "Admin",
       email: "admin@readygamecode.com",
       username: "admin",
       password: adminPassword,
+      role: "ADMIN",
     },
   });
 
   const reviewerPassword = await bcrypt.hash("reviewer123", 10);
-  await db.reviewer.upsert({
+  await db.user.upsert({
     where: { email: "pranav@readygamecode.com" },
     update: {},
     create: {
-      name: "Pranav",
+      firstname: "Pranav",
+      lastname: "Reviewer",
       email: "pranav@readygamecode.com",
       username: "pranav",
-      subcategories: JSON.stringify(subCatRecords.map((s) => s.id)),
       password: reviewerPassword,
+      role: "ADMIN",
       status: 1,
     },
   });

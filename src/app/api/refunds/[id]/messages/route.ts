@@ -36,9 +36,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Cannot reply to a closed refund request" }, { status: 400 });
     }
 
-    // Verify user is either buyer or seller
+    // Verify user is buyer, seller, or admin
+    const isAdmin = user.role === "ADMIN" || user.role === "admin";
     const isBuyer = refund.buyerId === user.sub;
-    const isSeller = refund.userId === user.sub;
+    const isSeller = refund.userId === user.sub || isAdmin;
 
     if (!isBuyer && !isSeller) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -63,11 +64,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     });
 
-    // Notify the other party via SSE
-    const recipientId = isBuyer ? refund.userId : refund.buyerId;
-    if (recipientId) {
-      broadcastNotification(recipientId);
-    }
+    // Notify all via SSE
+    broadcastNotification("all");
 
     return NextResponse.json({ success: true });
   } catch (error) {

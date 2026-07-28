@@ -35,12 +35,12 @@ export function addClient(userId: string, controller: ReadableStreamDefaultContr
   };
 }
 
-export function broadcastNotification(userId: string, eventType: string = 'notification_update') {
+export function broadcastNotification(userId?: string, eventType: string = 'notification_update') {
   const encoder = new TextEncoder();
   const data = `data: ${JSON.stringify({ type: eventType })}\n\n`;
   
   for (const client of Array.from(sseClients)) {
-    if (client.userId === userId) {
+    if (!userId || userId === "all" || userId === "admin" || client.userId === userId) {
       try {
         client.controller.enqueue(encoder.encode(data));
       } catch (e) {
