@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceFilter } from "@/components/product/price-filter";
 import { DateFilter } from "@/components/product/date-filter";
+import { ProductPagination } from "@/components/product/product-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,8 @@ interface ProductsPageProps {
     date_range?: string;
     featured?: string;
     sub_category?: string;
+    page?: string;
+    limit?: string;
   }>;
 }
 
@@ -43,6 +46,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const dateRange = sp.date_range ? parseInt(sp.date_range) : undefined;
   const isFeatured = sp.featured === "true";
   const subCategoryFilter = sp.sub_category && sp.sub_category !== "all" ? sp.sub_category : undefined;
+
+  const page = sp.page ? Math.max(1, parseInt(sp.page, 10) || 1) : 1;
+  const limit = sp.limit ? Math.max(1, Math.min(100, parseInt(sp.limit, 10) || 12)) : 12;
+  const skip = (page - 1) * limit;
 
   // Build where clause
   const where: any = {
@@ -78,13 +85,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (sortBy === "best_selling") orderBy = { totalSold: "desc" };
   if (sortBy === "best_rated") orderBy = { avgRating: "desc" };
 
-  const [products, categories, counts, subCategories] = await Promise.all([
+  const [products, filteredTotal, categories, counts, subCategories] = await Promise.all([
     db.product.findMany({
       where,
       include: { user: true, category: true },
       orderBy,
-      take: 24,
+      skip,
+      take: limit,
     }),
+    db.product.count({ where }),
     db.category.findMany({
       where: { status: 1 },
       orderBy: { name: "asc" },
@@ -111,10 +120,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   ]);
 
   const [totalAny, totalLastYear, totalLastMonth, totalLastWeek, totalLastDay] = counts;
+  const totalPages = Math.ceil(filteredTotal / limit);
 
   // Build URL helper for filter links
   function buildUrl(params: Record<string, string | undefined>) {
     const searchParams = new URLSearchParams();
+    if (limit !== 12) searchParams.set("limit", limit.toString());
     Object.entries(params).forEach(([k, v]) => {
       if (v) searchParams.set(k, v);
     });
@@ -127,7 +138,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">All Products</h1>
         <p className="text-muted-foreground mt-1">
-          {products.length} of {totalAny} products shown
+          {filteredTotal > 0
+            ? `Showing ${Math.min(skip + 1, filteredTotal)}–${Math.min(skip + products.length, filteredTotal)} of ${filteredTotal} products`
+            : "No products found"}
         </p>
       </div>
 
@@ -162,6 +175,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {subCategoryFilter && <input type="hidden" name="sub_category" value={subCategoryFilter} />}
               {sortBy !== "new_item" && <input type="hidden" name="sort_by" value={sortBy} />}
               {isFeatured && <input type="hidden" name="featured" value="true" />}
+              {limit !== 24 && <input type="hidden" name="limit" value={limit} />}
               
               <PriceFilter initialMin={minPrice} initialMax={maxPrice} maxLimit={500} />
               
@@ -303,11 +317,19 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
           {/* Grid */}
           {products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <ProductPagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={filteredTotal}
+                pageSize={limit}
+              />
+            </>
           ) : (
             <div className="text-center py-16 rounded-lg border border-dashed border-border">
               <Search className="h-12 w-12 mx-auto text-muted-foreground/50" />
