@@ -10,6 +10,8 @@ import { db } from "@/lib/db";
 import { ChatWidgets } from "@/components/chat-widgets";
 import { WelcomeModal } from "@/components/welcome-modal";
 
+import { JsonLd } from "@/components/seo/json-ld";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -21,7 +23,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://readygamecode.com'),
   title: {
     default: "Ready Game Code — Buy Unity Source Codes & Game Templates",
     template: "%s | Ready Game Code",
@@ -41,6 +43,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Ready Game Code" }],
   icons: {
     icon: "/favicon.ico",
+  },
+  alternates: {
+    canonical: "/",
   },
   openGraph: {
     title: "Buy Unity Source Code | Ready Game Code",
@@ -88,11 +93,39 @@ export default async function RootLayout({
     orderBy: { name: 'asc' },
   });
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://readygamecode.com';
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Ready Game Code",
+    "url": appUrl,
+    "logo": `${appUrl}/logo.png`,
+    "sameAs": [
+      "https://twitter.com/readygamecode",
+      "https://facebook.com/readygamecode"
+    ],
+    "description": "Premium marketplace for Unity, Android, and iOS game source codes and templates."
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Ready Game Code",
+    "url": appUrl,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${appUrl}/products?search={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
+        <JsonLd data={[organizationSchema, websiteSchema]} />
         <Header session={session} cartCount={cartCount} categories={categories} />
         <main className="flex-1">{children}</main>
         <Footer />

@@ -25,6 +25,8 @@ interface AuthorPageProps {
   params: Promise<{ username: string }>;
 }
 
+import { JsonLd } from "@/components/seo/json-ld";
+
 export async function generateMetadata({ params }: AuthorPageProps) {
   const { username } = await params;
   const author = await db.user.findUnique({
@@ -40,6 +42,14 @@ export async function generateMetadata({ params }: AuthorPageProps) {
   return {
     title: `${name} — Author Profile`,
     description: `Browse game source codes by ${name} on Ready Game Code.`,
+    alternates: {
+      canonical: `/authors/${username}`,
+    },
+    openGraph: {
+      title: `${name} — Author Profile | Ready Game Code`,
+      description: `Browse game source codes by ${name} on Ready Game Code.`,
+      type: "profile",
+    },
   };
 }
 
@@ -101,8 +111,28 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
     `${author.firstname || ""} ${author.lastname || ""}`.trim() || author.username || "Author";
   const initials = displayName.charAt(0).toUpperCase();
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "mainEntity": {
+      "@type": "Person",
+      "name": displayName,
+      "alternateName": author.username,
+      "url": `${baseUrl}/authors/${author.username}`,
+      "interactionStatistic": [
+        {
+          "@type": "InteractionCounter",
+          "interactionType": "https://schema.org/FollowAction",
+          "userInteractionCount": author.totalFollower,
+        },
+      ],
+    },
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <JsonLd data={personSchema} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-primary">Home</Link>

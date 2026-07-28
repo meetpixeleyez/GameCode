@@ -28,11 +28,40 @@ interface ProductsPageProps {
   }>;
 }
 
-export async function generateMetadata() {
+export async function generateMetadata({ searchParams }: ProductsPageProps) {
+  const sp = await searchParams;
+  const categoryFilter = sp?.category && sp.category !== "all" ? sp.category : undefined;
+  const search = sp?.search || "";
+
+  let title = "Buy Unity Source Codes & Game Templates";
+  let description =
+    "Browse premium Unity, Android, and iOS game source codes. Ready-to-publish game templates with AdMob integration, easy reskin options, and full documentation.";
+
+  if (categoryFilter) {
+    const cat = await db.category.findFirst({
+      where: { OR: [{ id: categoryFilter }, { name: { equals: categoryFilter, mode: "insensitive" } }] },
+      select: { name: true },
+    });
+    if (cat) {
+      title = `Buy ${cat.name} Game Source Codes & Templates`;
+      description = `Explore top-rated ${cat.name} game source codes, Unity projects, and mobile templates ready for publication.`;
+    }
+  } else if (search) {
+    title = `Search Results for "${search}" — Game Source Codes`;
+    description = `Find Unity game source codes and templates matching "${search}". High-quality digital assets for game developers.`;
+  }
+
   return {
-    title: "Buy Unity Source Codes & Game Templates",
-    description:
-      "Browse premium Unity, Android, and iOS game source codes. Ready-to-publish game templates with AdMob integration, easy reskin options, and full documentation.",
+    title,
+    description,
+    alternates: {
+      canonical: "/products",
+    },
+    openGraph: {
+      title: `${title} | Ready Game Code`,
+      description,
+      type: "website",
+    },
   };
 }
 

@@ -13,6 +13,8 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
 
+import { JsonLd } from "@/components/seo/json-ld";
+
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const post = await db.blogPost.findUnique({
@@ -25,6 +27,9 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   return {
     title: post.title,
     description: post.excerpt || post.title,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt || "",
@@ -43,6 +48,32 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   });
 
   if (!post) notFound();
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.excerpt || post.title,
+    "url": `${baseUrl}/blog/${post.slug}`,
+    "image": post.coverImage || `${baseUrl}/logo.png`,
+    "datePublished": post.publishedAt ? post.publishedAt.toISOString() : post.createdAt.toISOString(),
+    "dateModified": post.updatedAt.toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "Ready Game Code Team",
+      "url": baseUrl,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Ready Game Code",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/logo.png`,
+      },
+    },
+  };
 
   // Get related posts (same category, exclude current)
   const related = await db.blogPost.findMany({
@@ -68,6 +99,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <article className="container mx-auto px-4 py-12">
+      <JsonLd data={articleSchema} />
       <div className="max-w-3xl mx-auto">
         {/* Back link */}
         <Button variant="ghost" size="sm" asChild className="mb-6">

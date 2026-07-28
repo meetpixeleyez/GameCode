@@ -23,6 +23,8 @@ import {
   Mail,
 } from "lucide-react";
 
+import { JsonLd } from "@/components/seo/json-ld";
+
 export const dynamic = "force-dynamic";
 
 interface ProductPageProps {
@@ -46,10 +48,13 @@ export async function generateMetadata({ params }: ProductPageProps) {
   return {
     title,
     description,
+    alternates: {
+      canonical: `/game-source-code/${slug}`,
+    },
     openGraph: {
       title,
       description,
-      images: product.previewImage ? [{ url: product.previewImage }] : [],
+      images: product.previewImage || product.thumbnail ? [{ url: product.previewImage || product.thumbnail }] : [],
       type: "website",
     },
     twitter: {
@@ -183,15 +188,78 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       if (!Array.isArray(screenshots)) screenshots = [screenshots];
     }
   } catch(e) {}
-  
+
   if (screenshots.length === 0 && product.thumbnail) {
     screenshots = [product.thumbnail];
   } else if (product.thumbnail && !screenshots.includes(product.thumbnail)) {
     screenshots = [product.thumbnail, ...screenshots];
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": product.title,
+    "description": product.metaDescription || product.description?.replace(/<[^>]+>/g, "").slice(0, 200),
+    "url": `${baseUrl}/game-source-code/${product.slug}`,
+    "image": product.thumbnail || product.previewImage || `${baseUrl}/logo.png`,
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Unity, Android, iOS, Windows",
+    "offers": {
+      "@type": "Offer",
+      "price": product.price.toFixed(2),
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock",
+      "url": `${baseUrl}/game-source-code/${product.slug}`,
+      "seller": {
+        "@type": "Person",
+        "name": authorName,
+      },
+    },
+    "aggregateRating": product.totalReview > 0 ? {
+      "@type": "AggregateRating",
+      "ratingValue": product.avgRating.toFixed(1),
+      "reviewCount": product.totalReview,
+      "bestRating": "5",
+      "worstRating": "1",
+    } : undefined,
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Products",
+        "item": `${baseUrl}/products`,
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": product.category?.name || "Game Code",
+        "item": `${baseUrl}/products?category=${encodeURIComponent(product.category?.name || "")}`,
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": product.title,
+        "item": `${baseUrl}/game-source-code/${product.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <JsonLd data={[productSchema, breadcrumbSchema]} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-primary">Home</Link>

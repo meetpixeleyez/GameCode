@@ -30,6 +30,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Fetch active seller authors
+  const authors = await db.user.findMany({
+    where: { isAuthor: 1, status: 1 },
+    select: { username: true, updatedAt: true },
+  });
+
+  const authorUrls = authors
+    .filter((a) => a.username)
+    .map((author) => ({
+      url: `${baseUrl}/authors/${author.username}`,
+      lastModified: author.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+
+  // Fetch active categories
+  const categories = await db.category.findMany({
+    where: { status: 1 },
+    select: { name: true, updatedAt: true },
+  });
+
+  const categoryUrls = categories.map((cat) => ({
+    url: `${baseUrl}/products?category=${encodeURIComponent(cat.name)}`,
+    lastModified: cat.updatedAt,
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }));
+
   // Static routes
   const routes = [
     '',
@@ -48,5 +76,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === '' ? 1 : 0.7,
   }));
 
-  return [...routes, ...productUrls, ...blogUrls];
+  return [...routes, ...categoryUrls, ...productUrls, ...blogUrls, ...authorUrls];
 }
