@@ -139,16 +139,30 @@
 
 /* Glassmorphism Utilities */
 .glass {
-  @apply bg-background/60 backdrop-blur-md border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+  @apply bg-background/70 backdrop-blur-md border border-border/50 shadow-[0_4px_30px_rgba(0,0,0,0.06)];
 }
 .dark .glass {
-  @apply bg-[#0f172a]/60 border-white/5;
+  @apply bg-[#0f172a]/70 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)];
 }
 
 /* Subtle Gradient Backgrounds */
 .mesh-gradient {
-  background: radial-gradient(at 0% 0%, rgba(255,124,49,0.15) 0px, transparent 50%),
-              radial-gradient(at 100% 0%, rgba(59,130,246,0.15) 0px, transparent 50%),
+  background: radial-gradient(at 0% 0%, rgba(255,124,49,0.18) 0px, transparent 50%),
+              radial-gradient(at 100% 0%, rgba(59,130,246,0.18) 0px, transparent 50%),
               radial-gradient(at 100% 100%, rgba(139,92,246,0.15) 0px, transparent 50%),
               radial-gradient(at 0% 100%, rgba(16,185,129,0.15) 0px, transparent 50%);
 }
+
+/* Gaming Accent Glows */
+.glow-orange {
+  box-shadow: 0 0 25px -5px rgba(255, 124, 49, 0.35);
+}
+.glow-orange-sm {
+  box-shadow: 0 0 15px -3px rgba(255, 124, 49, 0.25);
+}
+
+/* Card Hover Animations */
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/40;
+}
+

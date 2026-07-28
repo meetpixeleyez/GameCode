@@ -54,7 +54,7 @@ export async function ProductCard({ product, initialIsFavorited = false, priorit
     : product.price;
 
   return (
-    <div className="group rounded-lg border border-border bg-card overflow-hidden hover:shadow-md transition-all duration-200">
+    <div className="group rounded-lg border border-border/80 bg-card overflow-hidden card-hover">
       {/* Image */}
       <div className="relative aspect-[4/3] bg-muted overflow-hidden">
         <Image
@@ -70,7 +70,7 @@ export async function ProductCard({ product, initialIsFavorited = false, priorit
           href={`/game-source-code/${product.slug}`}
           className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
         >
-          <span className="bg-background/90 text-foreground px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-sm">
+          <span className="bg-background/90 text-foreground px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 shadow-md">
             <Eye className="h-3.5 w-3.5" />
             Live Preview
           </span>
@@ -86,7 +86,7 @@ export async function ProductCard({ product, initialIsFavorited = false, priorit
         {/* Sale Badge */}
         {activeDiscount > 0 && (
           <div className="absolute top-2 left-2 z-10">
-            <Badge className="bg-destructive hover:bg-destructive text-white border-none shadow-sm text-[10px] px-1.5 py-0.5">
+            <Badge className="bg-gradient-to-r from-red-500 to-orange-500 text-white border-none shadow-xs text-[10px] px-2 py-0.5 font-semibold">
               SALE {activeDiscount}% OFF
             </Badge>
           </div>

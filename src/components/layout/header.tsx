@@ -45,7 +45,7 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 glass transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full transition-all duration-300">
       {/* Top marquee bar */}
       <div className="w-full bg-[#111] text-white">
         <div className="container mx-auto flex justify-between items-center py-1.5 px-4">
@@ -82,7 +82,8 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
       </div>
 
       {/* Main nav */}
-      <div className="container mx-auto">
+      <div className="w-full border-b border-border/50 bg-background/80 backdrop-blur-md shadow-xs">
+        <div className="container mx-auto">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
@@ -234,6 +235,7 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
             </nav>
           </div>
         )}
+        </div>
       </div>
     </header>
   );

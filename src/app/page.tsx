@@ -201,23 +201,24 @@ export default async function Home() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-16">
-        <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 md:p-12 text-center text-primary-foreground">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">
+        <div className="rounded-2xl bg-gradient-to-r from-orange-500 via-primary to-amber-500 p-8 md:p-12 text-center text-primary-foreground shadow-2xl shadow-primary/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+          <h2 className="text-2xl md:text-4xl font-extrabold mb-3 tracking-tight">
             Ready to Launch Your Game?
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6">
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-sm md:text-base">
             Join thousands of developers who bought our source codes and launched their
             games on Google Play and App Store.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button size="lg" variant="secondary" asChild>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
+            <Button size="lg" variant="secondary" asChild className="font-semibold shadow-md">
               <Link href="/register">Get Started</Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               asChild
-              className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              className="bg-transparent text-primary-foreground border-primary-foreground/80 hover:bg-primary-foreground hover:text-primary font-semibold"
             >
               <Link href="/contact">Hire Us</Link>
             </Button>
@@ -238,10 +239,12 @@ function StatCard({
   label: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 text-center">
-      <Icon className="h-6 w-6 text-primary mx-auto mb-2" />
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    <div className="rounded-xl border border-border/70 bg-card p-5 text-center card-hover">
+      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-primary">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="text-2xl font-bold tracking-tight">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1 font-medium">{label}</div>
     </div>
   );
 }
@@ -260,16 +263,16 @@ function InfoCard({
   linkText: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-6 space-y-3">
-      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+    <div className="rounded-xl border border-border/70 bg-card p-6 space-y-3 card-hover">
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-orange-400/10 flex items-center justify-center border border-primary/20">
         <Icon className="h-6 w-6 text-primary" />
       </div>
       <h3 className="font-semibold text-lg">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <Button variant="link" asChild className="px-0 text-primary">
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+      <Button variant="link" asChild className="px-0 text-primary font-medium hover:underline">
         <Link href={link}>
           {linkText}
-          <ArrowRight className="ml-1 h-3 w-3" />
+          <ArrowRight className="ml-1 h-3.5 w-3.5" />
         </Link>
       </Button>
     </div>
