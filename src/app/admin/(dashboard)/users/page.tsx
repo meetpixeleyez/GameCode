@@ -90,15 +90,15 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         </Link>
       </div>
 
-      <div className="border border-border rounded-lg bg-card overflow-hidden">
+      <div className="border border-border rounded-xl bg-card overflow-hidden shadow-xs">
         {users.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             No users found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground bg-muted/50 uppercase border-b border-border">
+          <div className="overflow-x-auto overflow-y-auto max-h-[500px] min-h-[460px] relative">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead className="text-xs text-muted-foreground bg-muted/95 backdrop-blur-xs uppercase border-b border-border sticky top-0 z-10 shadow-2xs">
                 <tr>
                   <th className="px-6 py-4 font-medium">User</th>
                   <th className="px-6 py-4 font-medium">Role</th>

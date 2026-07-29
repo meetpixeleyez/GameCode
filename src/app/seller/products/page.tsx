@@ -132,7 +132,7 @@ export default async function SellerProductsPage({ searchParams }: ProductsPageP
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[calc(100vh-270px)] min-h-[380px] overflow-y-auto pr-1">
           {products.map((product) => {
             const statusInfo = statusMap[product.status] || { label: "Unknown", variant: "outline" as const };
             return (

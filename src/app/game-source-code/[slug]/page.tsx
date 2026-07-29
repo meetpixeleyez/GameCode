@@ -203,7 +203,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   if (screenshots.length === 0 && product.thumbnail) {
     screenshots = [product.thumbnail];
-  } else if (product.thumbnail && !screenshots.includes(product.thumbnail)) {
     screenshots = [product.thumbnail, ...screenshots];
   }
 
@@ -211,31 +210,42 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const productSchema = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": ["Product", "SoftwareApplication"],
     "name": product.title,
-    "description": product.metaDescription || product.description?.replace(/<[^>]+>/g, "").slice(0, 200),
+    "description": product.metaDescription || product.description?.replace(/<[^>]+>/g, "").slice(0, 250),
     "url": `${baseUrl}/game-source-code/${product.slug}`,
-    "image": product.thumbnail || product.previewImage || `${baseUrl}/logo.png`,
+    "image": screenshots.length > 0 ? screenshots.map(img => img.startsWith("http") ? img : `${baseUrl}${img}`) : [`${baseUrl}/logo.png`],
+    "sku": product.id,
+    "mpn": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "Ready Game Code",
+    },
+    "category": product.category?.name || "Game Source Code",
     "applicationCategory": "GameApplication",
-    "operatingSystem": "Unity, Android, iOS, Windows",
+    "operatingSystem": "Unity, Android, iOS, Windows, macOS",
     "offers": {
       "@type": "Offer",
       "price": product.price.toFixed(2),
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock",
       "url": `${baseUrl}/game-source-code/${product.slug}`,
+      "priceValidUntil": new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       "seller": {
-        "@type": "Person",
-        "name": authorName,
+        "@type": "Organization",
+        "name": "Ready Game Code",
+        "url": baseUrl,
       },
     },
-    "aggregateRating": product.totalReview > 0 ? {
-      "@type": "AggregateRating",
-      "ratingValue": product.avgRating.toFixed(1),
-      "reviewCount": product.totalReview,
-      "bestRating": "5",
-      "worstRating": "1",
-    } : undefined,
+    ...(product.totalReview > 0 ? {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": product.avgRating.toFixed(1),
+        "reviewCount": product.totalReview,
+        "bestRating": "5",
+        "worstRating": "1",
+      }
+    } : {}),
   };
 
   const breadcrumbSchema = {
@@ -270,7 +280,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <article className="container mx-auto px-4 py-8" itemScope itemType="https://schema.org/Product">
       <JsonLd data={[productSchema, breadcrumbSchema]} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
@@ -531,6 +541,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         products={moreByAuthor}
         isAdmin={session?.role === "admin"}
       />
-    </div>
+    </article>
   );
 }

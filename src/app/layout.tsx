@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/layout/header";
@@ -8,18 +8,20 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCartContext } from "@/lib/cart-session";
 import { db } from "@/lib/db";
 import { ChatWidgets } from "@/components/chat-widgets";
+import { ThemeProvider } from "@/components/theme-provider";
 import { WelcomeModal } from "@/components/welcome-modal";
-
 import { JsonLd } from "@/components/seo/json-ld";
 
-const inter = Inter({
-  variable: "--font-inter",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -123,15 +125,22 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${outfit.variable} antialiased min-h-screen flex flex-col font-sans`}
+        className={`${plusJakartaSans.variable} ${outfit.variable} antialiased min-h-screen flex flex-col font-sans`}
       >
-        <JsonLd data={[organizationSchema, websiteSchema]} />
-        <Header session={session} cartCount={cartCount} categories={categories} />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ChatWidgets />
-        <Toaster />
-        <WelcomeModal />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <JsonLd data={[organizationSchema, websiteSchema]} />
+          <Header session={session} cartCount={cartCount} categories={categories} />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <ChatWidgets />
+          <Toaster />
+          <WelcomeModal />
+        </ThemeProvider>
       </body>
     </html>
   );

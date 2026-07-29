@@ -152,7 +152,7 @@ export default async function EarningsPage() {
               No sales yet. Once buyers purchase your products, sales will appear here.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
               {orderItems.map((item) => (
                 <div
                   key={item.id}
@@ -180,7 +180,7 @@ export default async function EarningsPage() {
                       {item.publishSelected === 1 && <span>· Publish</span>}
                       {item.storeOptimizationSelected === 1 && <span>· Store Opt</span>}
                       {item.isRefunded === 1 && (
-                        <Badge variant="destructive" className="text-[10px] bg-red-500/10 text-red-600 border-red-500/30">
+                        <Badge variant="destructive" className="text-[11px] bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-semibold px-2 py-0.5 rounded-full">
                           Refunded
                         </Badge>
                       )}
@@ -189,10 +189,10 @@ export default async function EarningsPage() {
                   <div className="text-right shrink-0">
                     {item.isRefunded === 1 ? (
                       <div>
-                        <div className="font-bold text-muted-foreground text-sm line-through">
+                        <div className="font-bold text-muted-foreground/70 text-xs line-through">
                           +${item.sellerEarning.toFixed(2)}
                         </div>
-                        <div className="text-xs text-red-500 font-semibold">
+                        <div className="text-xs text-rose-500 dark:text-rose-400 font-semibold">
                           $0.00 (Refunded)
                         </div>
                       </div>

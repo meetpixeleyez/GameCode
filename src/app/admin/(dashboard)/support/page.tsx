@@ -85,17 +85,17 @@ export default function AdminSupportPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[100px]">Ticket ID</TableHead>
-                  <TableHead className="w-[250px]">Customer</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+          <div className="rounded-xl border overflow-x-auto overflow-y-auto max-h-[500px] min-h-[460px] relative">
+            <Table className="border-collapse">
+              <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-xs shadow-2xs">
+                <TableRow className="bg-muted/95 hover:bg-muted/95 border-b border-border">
+                  <TableHead className="w-[100px] font-semibold">Ticket ID</TableHead>
+                  <TableHead className="w-[250px] font-semibold">Customer</TableHead>
+                  <TableHead className="font-semibold">Subject</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Priority</TableHead>
+                  <TableHead className="font-semibold">Last Updated</TableHead>
+                  <TableHead className="text-right font-semibold">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

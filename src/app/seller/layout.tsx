@@ -5,6 +5,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { Store, ArrowRight, Star } from "lucide-react";
 import { SellerSidebarNav } from "./seller-sidebar-nav";
+import { MobileNavSelect } from "../admin/(dashboard)/mobile-nav";
+
+const sellerNavItems = [
+  { href: "/seller", label: "Dashboard" },
+  { href: "/seller/products", label: "My Products" },
+  { href: "/seller/earnings", label: "Earnings" },
+  { href: "/seller/withdrawals", label: "Withdrawals" },
+  { href: "/seller/refunds", label: "Refunds" },
+  { href: "/seller/campaigns", label: "Campaigns" },
+  { href: "/seller/reviews", label: "Reviews" },
+  { href: "/dashboard", label: "Buyer Portal" },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -70,12 +82,21 @@ export default async function SellerLayout({
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Mobile Navigation Header */}
+      <div className="lg:hidden mb-6 flex justify-between items-center bg-card border border-border rounded-xl p-3 shadow-xs">
+        <div className="flex items-center gap-2">
+          <Store className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-sm">Seller Portal</span>
+        </div>
+        <MobileNavSelect navItems={sellerNavItems} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar */}
-        <aside className="lg:col-span-1">
+        <aside className="lg:col-span-1 hidden lg:block">
           <div className="sticky top-24 space-y-4">
             {/* Seller card */}
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="font-bold text-primary text-lg">{initials}</span>

@@ -221,7 +221,7 @@ export default function WithdrawalsPage() {
                 No withdrawal requests yet.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 {withdrawals.map((w) => {
                   const status = statusMap[w.status] || { label: "Unknown", variant: "outline" as const };
                   return (

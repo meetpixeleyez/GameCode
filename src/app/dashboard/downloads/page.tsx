@@ -56,7 +56,7 @@ export default async function DownloadsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[calc(100vh-270px)] min-h-[380px] overflow-y-auto pr-1">
           {orderItems.map((item) => (
             <Card key={item.id} className="overflow-hidden">
               <div className="flex gap-4 p-4">

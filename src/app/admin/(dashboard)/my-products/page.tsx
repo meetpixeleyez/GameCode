@@ -151,16 +151,16 @@ export default async function AdminMyProductsPage({ searchParams }: AdminMyProdu
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs text-muted-foreground bg-muted/50 uppercase border-b border-border">
+          <div className="overflow-x-auto overflow-y-auto max-h-[480px] min-h-[440px] relative">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead className="text-xs text-muted-foreground bg-muted/95 backdrop-blur-xs uppercase border-b border-border sticky top-0 z-10 shadow-2xs">
                 <tr>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Total Sold</th>
-                  <th className="px-4 py-3">Est. Revenue</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
+                  <th className="px-4 py-3 font-semibold">Product</th>
+                  <th className="px-4 py-3 font-semibold">Price</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Total Sold</th>
+                  <th className="px-4 py-3 font-semibold">Est. Revenue</th>
+                  <th className="px-4 py-3 font-semibold text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

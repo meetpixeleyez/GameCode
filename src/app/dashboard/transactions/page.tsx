@@ -52,15 +52,15 @@ export default async function TransactionsPage() {
               No transactions found.
             </div>
           ) : (
-            <div className="rounded-md border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Trx ID</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead className="text-right">Post Balance</TableHead>
+            <div className="rounded-xl border border-border overflow-x-auto overflow-y-auto max-h-[calc(100vh-270px)] min-h-[380px] relative">
+              <Table className="border-collapse">
+                <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-xs shadow-2xs">
+                  <TableRow className="bg-muted/95 hover:bg-muted/95 border-b border-border">
+                    <TableHead className="font-semibold">Date</TableHead>
+                    <TableHead className="font-semibold">Trx ID</TableHead>
+                    <TableHead className="font-semibold">Details</TableHead>
+                    <TableHead className="font-semibold">Amount</TableHead>
+                    <TableHead className="text-right font-semibold">Post Balance</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

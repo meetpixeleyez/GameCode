@@ -75,7 +75,7 @@ export default async function PurchasesPage({ searchParams }: PurchasesPageProps
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[calc(100vh-270px)] min-h-[380px] overflow-y-auto pr-1">
           {orders.map((order) => (
             <Card key={order.id}>
               <CardHeader className="pb-3">

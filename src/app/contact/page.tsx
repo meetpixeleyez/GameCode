@@ -181,17 +181,17 @@ export default function ContactPage() {
           {/* FAQ */}
           <div>
             <h2 className="font-semibold text-lg mb-4">Commonly Asked Questions</h2>
-            <Accordion type="single" collapsible className="space-y-2">
+            <Accordion type="single" collapsible className="space-y-3">
               {faqs.map((faq, i) => (
                 <AccordionItem
                   key={i}
                   value={`item-${i}`}
-                  className="border border-border rounded-md px-4"
+                  className="border border-border/80 rounded-xl px-4 bg-card shadow-2xs transition-all duration-200"
                 >
-                  <AccordionTrigger className="text-sm text-left">
+                  <AccordionTrigger className="text-sm font-semibold text-left py-3.5 hover:no-underline hover:text-primary">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground">
+                  <AccordionContent className="text-sm text-muted-foreground pb-4 leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>

@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-outfit);
+  --font-sans: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-heading: var(--font-outfit), system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -43,6 +43,8 @@
   --radius-xl: calc(var(--radius) + 4px);
   --animate-marquee: marquee 20s linear infinite;
   --animate-shine: shine 3s linear infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
 }
 
 @keyframes marquee {
@@ -55,74 +57,84 @@
   100% { background-position: 200% center; }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 107, 0, 0.3); }
+  50% { box-shadow: 0 0 28px rgba(255, 107, 0, 0.6); }
+}
+
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.75rem;
+  --background: oklch(0.99 0.005 240);
+  --foreground: oklch(0.14 0.02 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.14 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  /* Ready Game Code brand color: #FF7C31 orange */
-  --primary: oklch(0.7 0.18 50);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.95 0.04 50);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.7 0.18 50);
-  --chart-1: oklch(0.7 0.18 50);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.7 0.18 50);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.7 0.18 50);
+  --popover-foreground: oklch(0.14 0.02 260);
+  /* Electric GameCode Brand Warm Orange */
+  --primary: oklch(0.68 0.22 45);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 240);
+  --secondary-foreground: oklch(0.20 0.03 260);
+  --muted: oklch(0.96 0.01 240);
+  --muted-foreground: oklch(0.52 0.02 260);
+  --accent: oklch(0.95 0.03 45);
+  --accent-foreground: oklch(0.20 0.03 260);
+  --destructive: oklch(0.58 0.24 27);
+  --border: oklch(0.91 0.01 240);
+  --input: oklch(0.91 0.01 240);
+  --ring: oklch(0.68 0.22 45);
+  --chart-1: oklch(0.68 0.22 45);
+  --chart-2: oklch(0.62 0.18 160);
+  --chart-3: oklch(0.55 0.22 280);
+  --chart-4: oklch(0.80 0.18 80);
+  --chart-5: oklch(0.75 0.19 70);
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.14 0.02 260);
+  --sidebar-primary: oklch(0.68 0.22 45);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.01 240);
+  --sidebar-accent-foreground: oklch(0.20 0.03 260);
+  --sidebar-border: oklch(0.91 0.01 240);
+  --sidebar-ring: oklch(0.68 0.22 45);
 }
 
 .dark {
-  --background: oklch(0.18 0.015 255); /* Deep slate navy */
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.22 0.015 255); /* Slightly lighter slate */
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.22 0.015 255);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.18 50); /* Brand Orange */
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.28 0.015 255);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.28 0.015 255);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.28 0.015 255);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --background: oklch(0.14 0.02 260); /* Sleek Cyber Dark */
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(0.18 0.02 260);
+  --card-foreground: oklch(0.99 0 0);
+  --popover: oklch(0.18 0.02 260);
+  --popover-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.68 0.22 45);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.24 0.02 260);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.24 0.02 260);
+  --muted-foreground: oklch(0.70 0.01 260);
+  --accent: oklch(0.24 0.02 260);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.68 0.20 22);
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.18 50);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.20 0.015 255);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.7 0.18 50);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.28 0.015 255);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.18 50);
+  --ring: oklch(0.68 0.22 45);
+  --chart-1: oklch(0.68 0.22 45);
+  --chart-2: oklch(0.65 0.18 160);
+  --chart-3: oklch(0.60 0.22 280);
+  --chart-4: oklch(0.75 0.20 300);
+  --chart-5: oklch(0.65 0.22 16);
+  --sidebar: oklch(0.16 0.02 260);
+  --sidebar-foreground: oklch(0.99 0 0);
+  --sidebar-primary: oklch(0.68 0.22 45);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.24 0.02 260);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.68 0.22 45);
 }
 
 @layer base {
@@ -139,30 +151,33 @@
 
 /* Glassmorphism Utilities */
 .glass {
-  @apply bg-background/70 backdrop-blur-md border border-border/50 shadow-[0_4px_30px_rgba(0,0,0,0.06)];
+  @apply bg-background/75 backdrop-blur-md border border-border/60 shadow-[0_4px_30px_rgba(0,0,0,0.06)];
 }
 .dark .glass {
-  @apply bg-[#0f172a]/70 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)];
+  @apply bg-[#0f172a]/75 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.35)];
 }
 
-/* Subtle Gradient Backgrounds */
-.mesh-gradient {
-  background: radial-gradient(at 0% 0%, rgba(255,124,49,0.18) 0px, transparent 50%),
-              radial-gradient(at 100% 0%, rgba(59,130,246,0.18) 0px, transparent 50%),
-              radial-gradient(at 100% 100%, rgba(139,92,246,0.15) 0px, transparent 50%),
-              radial-gradient(at 0% 100%, rgba(16,185,129,0.15) 0px, transparent 50%);
+/* Gaming Mesh Background */
+.gaming-mesh-gradient {
+  background: radial-gradient(at 0% 0%, rgba(255,107,0,0.15) 0px, transparent 45%),
+              radial-gradient(at 100% 0%, rgba(139,92,246,0.15) 0px, transparent 45%),
+              radial-gradient(at 100% 100%, rgba(16,185,129,0.12) 0px, transparent 45%),
+              radial-gradient(at 0% 100%, rgba(59,130,246,0.12) 0px, transparent 45%);
 }
 
 /* Gaming Accent Glows */
-.glow-orange {
-  box-shadow: 0 0 25px -5px rgba(255, 124, 49, 0.35);
+.glow-brand {
+  box-shadow: 0 0 25px -5px rgba(255, 107, 0, 0.35);
 }
-.glow-orange-sm {
-  box-shadow: 0 0 15px -3px rgba(255, 124, 49, 0.25);
-}
-
-/* Card Hover Animations */
-.card-hover {
-  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/40;
+.glow-brand-lg {
+  box-shadow: 0 0 35px -5px rgba(255, 107, 0, 0.5);
 }
 
+/* High-Energy Card & Button Hover Animations */
+.card-hover, .game-card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary/15 hover:border-primary/50;
+}
+
+.btn-glow {
+  @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,107,0,0.4)] hover:scale-[1.02];
+}

@@ -42,17 +42,18 @@ export default async function AdminRefundsPage() {
           <CardTitle>All Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Buyer</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="rounded-xl border overflow-x-auto overflow-y-auto max-h-[500px] min-h-[460px] relative">
+            <Table className="border-collapse">
+              <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur-xs shadow-2xs">
+                <TableRow className="bg-muted/95 hover:bg-muted/95 border-b border-border">
+                  <TableHead className="font-semibold">Product</TableHead>
+                  <TableHead className="font-semibold">Buyer</TableHead>
+                  <TableHead className="font-semibold">Amount</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Date</TableHead>
+                  <TableHead className="text-right font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {refunds.length === 0 ? (
                 <TableRow>
@@ -86,6 +87,7 @@ export default async function AdminRefundsPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
