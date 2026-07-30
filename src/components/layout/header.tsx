@@ -36,6 +36,7 @@ const navLinks: NavLink[] = [
 export function Header({ session, cartCount = 0, categories = [] }: { session: JwtPayload | null; cartCount?: number; categories?: Category[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const isAdmin = session?.role ? String(session.role).toLowerCase() === "admin" : false;
 
   const isActive = (href: string) => {
     if (!pathname) return false;
@@ -164,7 +165,7 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
             <div className="flex items-center gap-2">
               <ThemeToggle />
 
-              {session?.role !== "admin" && (
+              {!isAdmin && (
                 <Button variant="ghost" size="icon" asChild className="relative hover:bg-accent/60">
                   <Link href="/cart" aria-label="Cart">
                     <ShoppingCart className="h-5 w-5" />
@@ -180,13 +181,13 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
               <div className="hidden sm:flex items-center gap-2">
                 {session ? (
                   <>
-                    {session.role === "admin" && (
+                    {isAdmin && (
                       <Button variant="outline" size="sm" asChild className="font-semibold">
                         <Link href="/admin">Admin Panel</Link>
                       </Button>
                     )}
                     <Button variant="ghost" size="icon" asChild className="rounded-full">
-                      <Link href={session.role === "admin" ? "/admin" : "/dashboard/profile"} aria-label="Profile">
+                      <Link href={isAdmin ? "/admin" : "/dashboard/profile"} aria-label="Profile">
                         <User className="h-5 w-5 text-primary" />
                       </Link>
                     </Button>
@@ -247,7 +248,7 @@ export function Header({ session, cartCount = 0, categories = [] }: { session: J
               <div className="pt-4 border-t border-border flex items-center justify-between">
                 {session ? (
                   <Button size="sm" className="w-full" asChild>
-                    <Link href={session.role === "admin" ? "/admin" : "/dashboard"}>
+                    <Link href={isAdmin ? "/admin" : "/dashboard"}>
                       My Account
                     </Link>
                   </Button>

@@ -8,10 +8,11 @@ import { ShieldAlert } from "lucide-react";
 
 export default async function AdminLoginPage() {
   const session = await getCurrentUser();
+  const sessionRole = session?.role ? String(session.role).toLowerCase() : "";
 
   // If a session exists, handle redirection or forbidden state
   if (session) {
-    if (session.role === "admin" || session.role === "ADMIN") {
+    if (sessionRole === "admin") {
       redirect("/admin");
     } else {
       // Normal buyer/user trying to access admin login

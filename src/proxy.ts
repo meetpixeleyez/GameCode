@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyAccessToken, type JwtPayload } from "@/lib/auth";
+import { verifyAccessToken, verifyRefreshToken, createAccessToken, type JwtPayload } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -18,19 +18,45 @@ export async function proxy(request: NextRequest) {
     payload = await verifyAccessToken(token);
   }
 
-  const role = payload?.role;
+  let newAccessToken: string | null = null;
+  // Fallback to refresh token if access token is missing or expired
+  if (!payload) {
+    const refreshToken = request.cookies.get("rgc_refresh")?.value;
+    if (refreshToken) {
+      payload = await verifyRefreshToken(refreshToken);
+      if (payload) {
+        newAccessToken = await createAccessToken(payload);
+      }
+    }
+  }
+
+  const role = payload?.role ? String(payload.role).toLowerCase() : null;
+  const isAdmin = role === "admin";
+
+  const createResponse = (res: NextResponse) => {
+    if (newAccessToken) {
+      res.cookies.set("rgc_access", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    }
+    return res;
+  };
 
   // --- Admin Route Protection ---
   const isAdminRoute = path.startsWith("/admin") && !path.startsWith("/admin/login");
   const isAdminApiRoute = path.startsWith("/api/admin") && !path.startsWith("/api/admin/login");
 
   if (isAdminRoute || isAdminApiRoute) {
-    if (!payload || role !== "admin") {
+    if (!payload || !isAdmin) {
       // Not an admin
       if (path.startsWith("/api/")) {
         return NextResponse.json({ error: "Unauthorized" }, { status: payload ? 403 : 401 });
       }
-      return NextResponse.redirect(new URL(payload ? "/" : "/admin/login", request.url));
+      return createResponse(NextResponse.redirect(new URL(payload ? "/" : "/admin/login", request.url)));
     }
   }
 
@@ -41,15 +67,15 @@ export async function proxy(request: NextRequest) {
   ];
   const isConsumerRoute = consumerRoutes.some(route => path.startsWith(route));
 
-  if (isConsumerRoute && role === "admin") {
+  if (isConsumerRoute && isAdmin) {
     // Admins are not allowed in consumer routes
     if (path.startsWith("/api/")) {
       return NextResponse.json({ error: "Forbidden: Admins cannot access consumer endpoints" }, { status: 403 });
     }
-    return NextResponse.redirect(new URL("/admin", request.url));
+    return createResponse(NextResponse.redirect(new URL("/admin", request.url)));
   }
 
-  return NextResponse.next();
+  return createResponse(NextResponse.next());
 }
 
 export const config = {
@@ -64,3 +90,4 @@ export const config = {
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
+

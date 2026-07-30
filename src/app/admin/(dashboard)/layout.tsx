@@ -28,7 +28,8 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getCurrentUser();
-  if (!session || (session.role !== "admin" && session.role !== "ADMIN")) {
+  const sessionRole = session?.role ? String(session.role).toLowerCase() : "";
+  if (!session || sessionRole !== "admin") {
     redirect("/admin/login");
   }
 
@@ -44,7 +45,8 @@ export default async function AdminLayout({
     },
   });
 
-  if (!admin || admin.role !== "ADMIN") {
+  const dbRole = admin?.role ? String(admin.role).toLowerCase() : "";
+  if (!admin || dbRole !== "admin") {
     redirect("/admin/login");
   }
 
