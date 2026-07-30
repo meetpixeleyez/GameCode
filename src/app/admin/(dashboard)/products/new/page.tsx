@@ -59,6 +59,7 @@ export default function AdminNewProductPage() {
 
   const activeCategory = categories.find((c) => c.id === form.categoryId);
   const subCategories = activeCategory?.subCategories || [];
+  const activeSubCategory = subCategories.find((sc: any) => sc.id === form.subCategoryId);
 
   async function uploadFiles() {
     const formData = new FormData();
@@ -229,7 +230,14 @@ export default function AdminNewProductPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description *</Label>
-              <RichTextEditor value={form.description} onChange={(val) => setForm({ ...form, description: val })} />
+              <RichTextEditor 
+                value={form.description} 
+                onChange={(val) => setForm({ ...form, description: val })}
+                productTitle={form.title}
+                categoryName={activeCategory?.name}
+                subcategoryName={activeSubCategory?.name}
+                tags={form.tags}
+              />
             </div>
             <div className="space-y-2">
               <Label>Tags</Label>

@@ -355,7 +355,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
             <TabsContent value="description" className="mt-4">
               <div
-                className="prose prose-sm max-w-none dark:prose-invert"
+                className="product-description-content prose prose-sm md:prose-base max-w-none dark:prose-invert"
                 dangerouslySetInnerHTML={{
                   __html: product.description || "<p>No description available.</p>",
                 }}
