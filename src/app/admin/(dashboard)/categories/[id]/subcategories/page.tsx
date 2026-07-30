@@ -55,6 +55,7 @@ export default function AdminSubCategoriesPage({ params }: { params: Promise<{ i
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const url = editId ? `/api/admin/subcategories/${editId}` : `/api/admin/categories/${categoryId}/subcategories`;
@@ -140,7 +141,7 @@ export default function AdminSubCategoriesPage({ params }: { params: Promise<{ i
                 <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
               </div>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Saving..." : "Save SubCategory"}
+                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save SubCategory"}
               </Button>
             </form>
           </DialogContent>

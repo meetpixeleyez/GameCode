@@ -6,8 +6,8 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "dev-secret-change-in-production-min-32-chars"
 );
 
-const ACCESS_TOKEN_TTL = "15m"; // 15 minutes
-const REFRESH_TOKEN_TTL = "7d"; // 7 days
+const ACCESS_TOKEN_TTL = "7d"; // 7 days
+const REFRESH_TOKEN_TTL = "30d"; // 30 days
 const ACCESS_COOKIE = "rgc_access";
 const REFRESH_COOKIE = "rgc_refresh";
 
@@ -88,11 +88,11 @@ export async function setAuthCookies(payload: JwtPayload) {
 
   cookieStore.set(ACCESS_COOKIE, accessToken, {
     ...COOKIE_OPTIONS,
-    maxAge: 15 * 60, // 15 minutes
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   });
   cookieStore.set(REFRESH_COOKIE, refreshToken, {
     ...COOKIE_OPTIONS,
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   });
 }
 
@@ -105,9 +105,33 @@ export async function clearAuthCookies() {
 export async function getCurrentUser(): Promise<JwtPayload | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ACCESS_COOKIE)?.value;
-  if (!accessToken) return null;
+  let payload: JwtPayload | null = null;
   
-  const payload = await verifyAccessToken(accessToken);
+  if (accessToken) {
+    payload = await verifyAccessToken(accessToken);
+  }
+
+  // If access token is missing or expired, attempt refresh token fallback
+  if (!payload) {
+    const refreshToken = cookieStore.get(REFRESH_COOKIE)?.value;
+    if (refreshToken) {
+      const refreshPayload = await verifyRefreshToken(refreshToken);
+      if (refreshPayload) {
+        payload = {
+          sub: refreshPayload.sub,
+          email: refreshPayload.email,
+          role: refreshPayload.role,
+          username: refreshPayload.username,
+        };
+        try {
+          await setAuthCookies(payload);
+        } catch {
+          // ignore if setAuthCookies fails in Server Component context
+        }
+      }
+    }
+  }
+
   if (!payload) return null;
 
   try {

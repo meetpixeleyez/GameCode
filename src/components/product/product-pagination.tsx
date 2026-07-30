@@ -21,7 +21,7 @@ export function ProductPagination({
 }: ProductPaginationProps) {
   const searchParams = useSearchParams();
 
-  if (totalItems === 0) return null;
+  if (totalItems === 0 || totalPages <= 1) return null;
 
   const startItem = Math.min((currentPage - 1) * pageSize + 1, totalItems);
   const endItem = Math.min(currentPage * pageSize, totalItems);

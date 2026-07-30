@@ -27,6 +27,7 @@ export function useAddToCart() {
 
   const addToCart = useCallback(
     async (opts: AddToCartOptions) => {
+      if (loading) return;
       setLoading(true);
       try {
         const res = await fetch("/api/cart", {

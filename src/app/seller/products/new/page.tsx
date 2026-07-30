@@ -10,6 +10,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Upload, X } from "lucide-react";
 
@@ -80,6 +81,7 @@ export default function NewProductPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (saving) return;
     if (!form.categoryId || !form.subCategoryId) {
       toast({ title: "Error", description: "Please select a Category and Subcategory.", variant: "destructive" });
       return;
@@ -163,34 +165,28 @@ export default function NewProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
-                <select
+                <SearchableSelect
                   id="category"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  required
+                  options={categories.map((c) => ({ value: c.id, label: c.name }))}
                   value={form.categoryId}
-                  onChange={(e) => setForm({ ...form, categoryId: e.target.value, subCategoryId: "" })}
-                >
-                  <option value="" disabled>Select One</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  onValueChange={(val) => setForm({ ...form, categoryId: val, subCategoryId: "" })}
+                  placeholder="Select Category"
+                  searchPlaceholder="Search category..."
+                  emptyText="No categories found."
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subCategory">Subcategory *</Label>
-                <select
+                <SearchableSelect
                   id="subCategory"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  required
+                  options={subCategories.map((sc: any) => ({ value: sc.id, label: sc.name }))}
                   value={form.subCategoryId}
-                  onChange={(e) => setForm({ ...form, subCategoryId: e.target.value })}
+                  onValueChange={(val) => setForm({ ...form, subCategoryId: val })}
                   disabled={!form.categoryId || subCategories.length === 0}
-                >
-                  <option value="" disabled>Select One</option>
-                  {subCategories.map((sc: any) => (
-                    <option key={sc.id} value={sc.id}>{sc.name}</option>
-                  ))}
-                </select>
+                  placeholder={!form.categoryId ? "Select Category first" : subCategories.length === 0 ? "No Subcategories" : "Select Subcategory"}
+                  searchPlaceholder="Search subcategory..."
+                  emptyText="No subcategories found."
+                />
               </div>
             </div>
           </CardContent>

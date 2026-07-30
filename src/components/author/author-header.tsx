@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
   Star,
@@ -55,6 +56,7 @@ export function AuthorHeader({
 
   const handleFollowToggle = async () => {
     if (!currentUserId) {
+      toast({ title: "Please sign in to follow authors", description: "You need an active account to follow authors.", variant: "destructive" });
       router.push("/login");
       return;
     }
@@ -139,19 +141,42 @@ export function AuthorHeader({
       <Separator className="my-4" />
 
       <div className="flex flex-wrap gap-2">
-        <Button 
-          size="sm" 
-          variant={isFollowing ? "default" : "outline"} 
-          onClick={handleFollowToggle}
-          disabled={loading || currentUserId === author.id}
-        >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Users className="mr-2 h-4 w-4" />
-          )}
-          {isFollowing ? "Following" : "Follow"}
-        </Button>
+        {currentUserId === author.id ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block cursor-not-allowed">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    disabled
+                    className="pointer-events-none opacity-60"
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Follow
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p>You cannot follow yourself</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <Button 
+            size="sm" 
+            variant={isFollowing ? "default" : "outline"} 
+            onClick={handleFollowToggle}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Users className="mr-2 h-4 w-4" />
+            )}
+            {isFollowing ? "Following" : "Follow"}
+          </Button>
+        )}
         <Button size="sm" variant="outline" asChild>
           <Link href="/contact">
             <Mail className="mr-2 h-4 w-4" />

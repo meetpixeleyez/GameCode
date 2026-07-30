@@ -14,11 +14,16 @@ export async function POST(
 
     const { username } = await params;
     
-    const author = await db.user.findUnique({
-      where: { username },
+    const author = await db.user.findFirst({
+      where: {
+        OR: [
+          { username: { equals: username, mode: "insensitive" } },
+          { id: username },
+        ],
+      },
     });
 
-    if (!author || author.isAuthor !== 1) {
+    if (!author || author.status === 0) {
       return NextResponse.json({ error: "Author not found" }, { status: 404 });
     }
 

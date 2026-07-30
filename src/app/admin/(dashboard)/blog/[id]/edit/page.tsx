@@ -58,6 +58,7 @@ export default function AdminEditBlogPost() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/admin/blog/${postId}`, {
@@ -164,7 +165,7 @@ export default function AdminEditBlogPost() {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Update Post"}
+            {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Update Post"}
           </Button>
         </div>
       </form>

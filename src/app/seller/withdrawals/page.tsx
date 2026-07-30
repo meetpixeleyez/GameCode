@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Download, ArrowRight, Wallet } from "lucide-react";
 
@@ -56,6 +57,7 @@ export default function WithdrawalsPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/withdrawals", {
@@ -153,16 +155,19 @@ export default function WithdrawalsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="method">Withdrawal Method</Label>
-                <select
-                  id="method"
+                <Select
                   value={form.method}
-                  onChange={(e) => setForm({ ...form, method: e.target.value })}
-                  className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  onValueChange={(val) => setForm({ ...form, method: val })}
                 >
-                  <option value="google_pay">Google Pay / UPI</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="paypal">PayPal</option>
-                </select>
+                  <SelectTrigger id="method" className="w-full">
+                    <SelectValue placeholder="Select Withdrawal Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google_pay">Google Pay / UPI</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="paypal">PayPal</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

@@ -54,6 +54,7 @@ export default function AdminCategoriesPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const url = editId ? `/api/admin/categories/${editId}` : "/api/admin/categories";
@@ -136,7 +137,7 @@ export default function AdminCategoriesPage() {
                 <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
               </div>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Saving..." : "Save Category"}
+                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Category"}
               </Button>
             </form>
           </DialogContent>

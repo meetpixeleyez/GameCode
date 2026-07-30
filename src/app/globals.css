@@ -147,6 +147,10 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight;
   }
+  select option {
+    background-color: var(--card);
+    color: var(--card-foreground);
+  }
 }
 
 /* Glassmorphism Utilities */
@@ -180,4 +184,20 @@
 
 .btn-glow {
   @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,107,0,0.4)] hover:scale-[1.02];
+}
+
+/* Custom Sleek Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 0, 0.6);
 }

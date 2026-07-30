@@ -4,6 +4,7 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { ProductCard } from "@/components/product/product-card";
+import { ProductPagination } from "@/components/product/product-pagination";
 import { AuthorHeader } from "@/components/author/author-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,22 +24,28 @@ export const dynamic = "force-dynamic";
 
 interface AuthorPageProps {
   params: Promise<{ username: string }>;
+  searchParams?: Promise<{ page?: string }>;
 }
 
 import { JsonLd } from "@/components/seo/json-ld";
 
 export async function generateMetadata({ params }: AuthorPageProps) {
   const { username } = await params;
-  const author = await db.user.findUnique({
-    where: { username },
-    select: { username: true, firstname: true, lastname: true, isAuthor: true },
+  const author = await db.user.findFirst({
+    where: {
+      OR: [
+        { username: { equals: username, mode: "insensitive" } },
+        { id: username },
+      ],
+    },
+    select: { username: true, firstname: true, lastname: true, isAuthor: true, status: true },
   });
 
-  if (!author || author.isAuthor !== 1) {
+  if (!author || author.status === 0) {
     return { title: "Author Not Found" };
   }
 
-  const name = `${author.firstname || ""} ${author.lastname || ""}`.trim() || author.username;
+  const name = `${author.firstname || ""} ${author.lastname || ""}`.trim() || author.username || "Author";
   return {
     title: `${name} — Author Profile`,
     description: `Browse game source codes by ${name} on Ready Game Code.`,
@@ -53,11 +60,19 @@ export async function generateMetadata({ params }: AuthorPageProps) {
   };
 }
 
-export default async function AuthorProfilePage({ params }: AuthorPageProps) {
+export default async function AuthorProfilePage({ params, searchParams }: AuthorPageProps) {
   const { username } = await params;
+  const sp = (await searchParams) || {};
+  const page = Math.max(1, parseInt(sp.page || "1", 10));
+  const pageSize = 12;
 
-  const author = await db.user.findUnique({
-    where: { username },
+  const author = await db.user.findFirst({
+    where: {
+      OR: [
+        { username: { equals: username, mode: "insensitive" } },
+        { id: username },
+      ],
+    },
     select: {
       id: true,
       firstname: true,
@@ -74,25 +89,38 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
       totalFollowing: true,
       countryName: true,
       createdAt: true,
+      status: true,
     },
   });
 
-  if (!author || author.isAuthor !== 1) {
+  if (!author || author.status === 0) {
     notFound();
   }
 
-  // Get author's products
-  const [products, collections] = await Promise.all([
+  // Get author's total products count and paginated products
+  const [totalProducts, products, collections] = await Promise.all([
+    db.product.count({
+      where: { userId: author.id, status: 1 },
+    }),
     db.product.findMany({
       where: { userId: author.id, status: 1 },
-      include: { user: true },
+      include: {
+        user: true,
+        campaignProducts: {
+          include: { campaign: true },
+        },
+      },
       orderBy: { totalSold: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
     db.productCollection.findMany({
       where: { userId: author.id },
       take: 10,
     }),
   ]);
+
+  const totalPages = Math.ceil(totalProducts / pageSize);
 
   const user = await getCurrentUser();
   let initialIsFollowing = false;
@@ -145,7 +173,7 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
       {/* Profile header */}
       <AuthorHeader 
         author={author} 
-        productsCount={products.length} 
+        productsCount={totalProducts} 
         initialIsFollowing={initialIsFollowing} 
         currentUserId={user?.sub}
       />
@@ -154,7 +182,7 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
       <Tabs defaultValue="products" className="w-full">
         <TabsList>
           <TabsTrigger value="products">
-            Products ({products.length})
+            Products ({totalProducts})
           </TabsTrigger>
           <TabsTrigger value="collections">
             Collections ({collections.length})
@@ -171,11 +199,20 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <ProductPagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={totalProducts}
+                pageSize={pageSize}
+                baseUrl={`/authors/${author.username}`}
+              />
+            </>
           )}
         </TabsContent>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,6 +22,7 @@ export function PoliciesForm({ initialData }: PoliciesFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     setIsSaving(true);
     try {
       const res = await fetch("/api/admin/policies", {
@@ -109,7 +111,7 @@ export function PoliciesForm({ initialData }: PoliciesFormProps) {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save All Policies"}
+          {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save All Policies"}
         </Button>
       </div>
     </form>

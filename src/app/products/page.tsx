@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceFilter } from "@/components/product/price-filter";
 import { DateFilter } from "@/components/product/date-filter";
 import { SubCategoryFilter } from "@/components/product/subcategory-filter";
 import { ProductPagination } from "@/components/product/product-pagination";
+import { MobileFilterDrawer } from "@/components/product/mobile-filter-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -152,6 +154,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const [totalAny, totalLastYear, totalLastMonth, totalLastWeek, totalLastDay] = counts;
   const totalPages = Math.ceil(filteredTotal / limit);
 
+  // Fetch logged in user's favorites
+  const session = await getCurrentUser();
+  let userFavoriteIds = new Set<string>();
+  if (session?.sub) {
+    const favs = await db.productUser.findMany({
+      where: { userId: session.sub },
+      select: { productId: true },
+    });
+    userFavoriteIds = new Set(favs.map((f) => f.productId));
+  }
+
   // Build URL helper for filter links
   function buildUrl(params: Record<string, string | undefined>) {
     const searchParams = new URLSearchParams();
@@ -174,9 +187,105 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </p>
       </div>
 
+      {/* Mobile Filter Drawer Button */}
+      <MobileFilterDrawer activeCount={[search, categoryFilter, subCategoryFilter, minPrice !== undefined ? "1" : "", maxPrice !== undefined ? "1" : "", dateRange ? "1" : ""].filter(Boolean).length}>
+        <div className="space-y-6">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+              <Search className="h-4 w-4 text-primary" />
+              Search
+            </h3>
+            <form action="/products" method="get" className="space-y-2">
+              <Input
+                type="search"
+                name="search"
+                defaultValue={search}
+                placeholder="Search products..."
+                className="text-sm"
+              />
+              <Button type="submit" size="sm" className="w-full">
+                Search
+              </Button>
+            </form>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="font-semibold text-sm mb-3">Price Range</h3>
+            <form action="/products" method="get" className="space-y-4">
+              {search && <input type="hidden" name="search" value={search} />}
+              {categoryFilter && <input type="hidden" name="category" value={categoryFilter} />}
+              {subCategoryFilter && <input type="hidden" name="sub_category" value={subCategoryFilter} />}
+              {sortBy !== "new_item" && <input type="hidden" name="sort_by" value={sortBy} />}
+              {isFeatured && <input type="hidden" name="featured" value="true" />}
+              {limit !== 24 && <input type="hidden" name="limit" value={limit} />}
+              
+              <PriceFilter initialMin={minPrice} initialMax={maxPrice} maxLimit={500} />
+              
+              <Button type="submit" size="sm" variant="outline" className="w-full">
+                Apply Filter
+              </Button>
+            </form>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="font-semibold text-sm mb-3">Category</h3>
+            <ul className="space-y-1">
+              <li>
+                <Link
+                  href={buildUrl({ search, sort_by: sortBy, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
+                  className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
+                    !categoryFilter ? "bg-accent font-medium" : "text-muted-foreground"
+                  }`}
+                >
+                  All Categories
+                </Link>
+              </li>
+              {categories.map((cat) => (
+                <li key={cat.id}>
+                  <Link
+                    href={buildUrl({ search, sort_by: sortBy, category: cat.id, min_price: sp.min_price, max_price: sp.max_price, featured: sp.featured })}
+                    className={`block text-sm px-2 py-1.5 rounded-md hover:bg-accent transition-colors ${
+                      categoryFilter === cat.id ? "bg-accent font-medium" : "text-muted-foreground"
+                    }`}
+                  >
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {categoryFilter && subCategories.length > 0 && (
+            <SubCategoryFilter
+              subCategories={subCategories}
+              categoryFilter={categoryFilter}
+              subCategoryFilter={subCategoryFilter}
+              search={search}
+              sortBy={sortBy}
+              minPrice={sp.min_price}
+              maxPrice={sp.max_price}
+              featured={sp.featured}
+            />
+          )}
+
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="font-semibold text-sm mb-3">Date Added</h3>
+            <DateFilter 
+              counts={{
+                any: totalAny,
+                year: totalLastYear,
+                month: totalLastMonth,
+                week: totalLastWeek,
+                day: totalLastDay
+              }} 
+            />
+          </div>
+        </div>
+      </MobileFilterDrawer>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar filters */}
-        <aside className="lg:col-span-1 space-y-6">
+        {/* Desktop Sidebar filters */}
+        <aside className="hidden lg:block lg:col-span-1 space-y-6">
           <div className="rounded-lg border border-border bg-card p-4">
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
               <Search className="h-4 w-4" />
@@ -333,7 +442,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    initialIsFavorited={userFavoriteIds.has(product.id)}
+                  />
                 ))}
               </div>
               <ProductPagination

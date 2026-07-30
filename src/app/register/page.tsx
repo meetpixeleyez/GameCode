@@ -42,6 +42,7 @@ function RegisterForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {
@@ -138,6 +139,7 @@ function RegisterForm() {
 
   async function handleVerifyOTP(e: FormEvent) {
     e.preventDefault();
+    if (verifying) return;
     setVerifying(true);
 
     try {

@@ -23,6 +23,7 @@ export function AdminLoginForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {

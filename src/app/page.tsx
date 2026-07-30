@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,16 @@ async function getHomepageData() {
 export default async function Home() {
   const { featuredProducts, popularProducts, blogPosts, totalProducts, totalAuthors } =
     await getHomepageData();
+
+  const session = await getCurrentUser();
+  let userFavoriteIds = new Set<string>();
+  if (session?.sub) {
+    const favs = await db.productUser.findMany({
+      where: { userId: session.sub },
+      select: { productId: true },
+    });
+    userFavoriteIds = new Set(favs.map((f) => f.productId));
+  }
 
   return (
     <>
@@ -132,7 +143,12 @@ export default async function Home() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {featuredProducts.map((product, idx) => (
-            <ProductCard key={product.id} product={product} priority={idx < 4} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              priority={idx < 4} 
+              initialIsFavorited={userFavoriteIds.has(product.id)}
+            />
           ))}
         </div>
       </section>
@@ -149,7 +165,11 @@ export default async function Home() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {popularProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              initialIsFavorited={userFavoriteIds.has(product.id)}
+            />
           ))}
         </div>
       </section>

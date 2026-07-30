@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { AddToCartButton } from "./add-to-cart";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { getCurrentUser } from "@/lib/auth";
+import { db } from "@/lib/db";
 
 interface ProductCardProps {
   product: {
@@ -31,11 +32,20 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
-export async function ProductCard({ product, initialIsFavorited = false, priority = false }: ProductCardProps) {
+export async function ProductCard({ product, initialIsFavorited, priority = false }: ProductCardProps) {
   const session = await getCurrentUser();
   const isAdmin = session?.role === "admin";
   const authorName = product.user?.username || "Ready Game Code";
   const imageSrc = product.thumbnail || "/products/placeholder.svg";
+
+  let isFavorited = initialIsFavorited;
+  if (isFavorited === undefined && session?.sub) {
+    const fav = await db.productUser.findFirst({
+      where: { userId: session.sub, productId: product.id },
+      select: { productId: true },
+    });
+    isFavorited = !!fav;
+  }
 
   // Check for active campaign discount
   let activeDiscount = 0;
@@ -80,7 +90,7 @@ export async function ProductCard({ product, initialIsFavorited = false, priorit
         {/* Favorite Button Overlay */}
         {!isAdmin && (
           <div className="absolute top-2.5 right-2.5 z-10 bg-background/85 rounded-full p-0.5 backdrop-blur-md opacity-90 group-hover:opacity-100 transition-all duration-300 shadow-sm hover:scale-110">
-            <FavoriteButton productId={product.id} initialIsFavorited={initialIsFavorited} size={15} />
+            <FavoriteButton productId={product.id} initialIsFavorited={!!isFavorited} size={15} />
           </div>
         )}
 

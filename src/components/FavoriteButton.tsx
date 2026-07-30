@@ -23,6 +23,7 @@ export function FavoriteButton({ productId, initialIsFavorited = false, classNam
     e.preventDefault(); // Prevent triggering parent links if embedded in a card
     e.stopPropagation();
 
+    if (loading) return;
     setLoading(true);
 
     try {

@@ -12,6 +12,7 @@ export function RefundActionButtons({ refundId }: { refundId: string }) {
   const { toast } = useToast();
 
   async function handleAction(action: "approve" | "decline") {
+    if (processing !== null) return;
     if (!confirm(`Are you sure you want to ${action} this refund? This action cannot be undone.`)) return;
 
     setProcessing(action);
