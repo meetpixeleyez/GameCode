@@ -1,5 +1,7 @@
 import { PolicyLayout } from "@/components/policy/policy-layout";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Privacy Policy",
   description: "How Ready Game Code collects, uses, and protects your personal information.",

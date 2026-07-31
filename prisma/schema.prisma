@@ -84,7 +84,9 @@ model User {
   activities        Activity[] @relation("ActivityUser")
   orderItems        OrderItem[]
   campaignProducts  CampaignProduct[]
-
+  @@index([status])
+  @@index([role])
+  @@index([isAuthor, status])
   @@map("users")
 }
 
@@ -267,7 +269,10 @@ model Product {
 
   @@index([userId])
   @@index([categoryId])
+  @@index([subCategoryId])
   @@index([status])
+  @@index([status, isFeatured])
+  @@index([status, isFree])
   @@map("products")
 }
 
@@ -666,7 +671,8 @@ model BlogPost {
   publishedAt     DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
+  @@index([isPublished])
+  @@index([blogCategoryId])
   @@map("blog_posts")
 }
 

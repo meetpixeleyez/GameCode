@@ -1,5 +1,7 @@
 import { PolicyLayout } from "@/components/policy/policy-layout";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Refund Policy",
   description: "Refund policy for digital products purchased on Ready Game Code.",

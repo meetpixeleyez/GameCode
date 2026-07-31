@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import ContactClient from "./contact-client";
 import { JsonLd } from "@/components/seo/json-ld";
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Contact Us",
   description: "Get in touch with the Ready Game Code team for support, custom reskinning, or business inquiries.",

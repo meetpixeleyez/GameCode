@@ -1,5 +1,7 @@
 import { PolicyLayout } from "@/components/policy/policy-layout";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Terms & Conditions",
   description: "The terms and conditions for using Ready Game Code marketplace.",

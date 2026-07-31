@@ -19,6 +19,8 @@ import {
   Rocket,
 } from "lucide-react";
 
+export const revalidate = 3600;
+
 export async function generateMetadata() {
   return {
     title: "About Us — Engineering the Future of Game Development",
