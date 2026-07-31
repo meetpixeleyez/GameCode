@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Code2, Calendar } from "lucide-react";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +13,44 @@ interface BlogPageProps {
 }
 
 export async function generateMetadata() {
+  const title = "Blog — Game Development Tips, Tutorials & Growth Strategies";
+  const description = "Insights, tutorials, and growth strategies for game developers. Learn ASO, marketing, LiveOps, and more from the Ready Game Code blog.";
+
   return {
-    title: "Blog — Game Development Tips, Tutorials & Growth Strategies",
-    description:
-      "Insights, tutorials, and growth strategies for game developers. Learn ASO, marketing, LiveOps, and more from the Ready Game Code blog.",
+    title,
+    description,
+    alternates: {
+      canonical: "/blog",
+    },
+    openGraph: {
+      title: `${title} | Ready Game Code`,
+      description,
+    },
   };
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const { category: categorySlug } = await searchParams;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Blog",
+        "item": `${baseUrl}/blog`
+      }
+    ]
+  };
 
   // Load categories
   const categories = await db.blogCategory.findMany({
@@ -47,6 +77,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <JsonLd data={[breadcrumbSchema]} />
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">

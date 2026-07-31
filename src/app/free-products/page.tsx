@@ -3,18 +3,48 @@ import { db } from "@/lib/db";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { Gift, ArrowRight, Sparkles } from "lucide-react";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
+  const title = "Free Game Source Codes — Download Free Unity Templates";
+  const description = "Download free Unity game source codes and templates. Free game codes with AdMob integration, ready to publish.";
+  
   return {
-    title: "Free Game Source Codes — Download Free Unity Templates",
-    description:
-      "Download free Unity game source codes and templates. Free game codes with AdMob integration, ready to publish.",
+    title,
+    description,
+    alternates: {
+      canonical: "/free-products",
+    },
+    openGraph: {
+      title: `${title} | Ready Game Code`,
+      description,
+    },
   };
 }
 
 export default async function FreeProductsPage() {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Free Products",
+        "item": `${baseUrl}/free-products`
+      }
+    ]
+  };
+
   const categories = await db.category.findMany({
     where: { status: 1 },
     include: {
@@ -35,6 +65,7 @@ export default async function FreeProductsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <JsonLd data={[breadcrumbSchema]} />
       {/* Header */}
       <div className="text-center mb-10">
         <Badge variant="secondary" className="mb-3">

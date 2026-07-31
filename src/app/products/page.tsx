@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const dynamic = "force-dynamic";
 
@@ -175,8 +176,29 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     return `/products?${searchParams.toString()}`;
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://readygamecode.com";
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Products",
+        "item": `${baseUrl}/products`
+      }
+    ]
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <JsonLd data={[breadcrumbSchema]} />
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold">All Products</h1>

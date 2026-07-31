@@ -3,6 +3,13 @@ import { PolicyLayout } from "@/components/policy/policy-layout";
 export const metadata = {
   title: "Terms & Conditions",
   description: "The terms and conditions for using Ready Game Code marketplace.",
+  alternates: {
+    canonical: "/terms-conditions",
+  },
+  openGraph: {
+    title: "Terms & Conditions | Ready Game Code",
+    description: "The terms and conditions for using Ready Game Code marketplace.",
+  },
 };
 
 import { db } from "@/lib/db";

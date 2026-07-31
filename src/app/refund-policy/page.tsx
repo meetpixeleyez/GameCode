@@ -3,6 +3,13 @@ import { PolicyLayout } from "@/components/policy/policy-layout";
 export const metadata = {
   title: "Refund Policy",
   description: "Refund policy for digital products purchased on Ready Game Code.",
+  alternates: {
+    canonical: "/refund-policy",
+  },
+  openGraph: {
+    title: "Refund Policy | Ready Game Code",
+    description: "Refund policy for digital products purchased on Ready Game Code.",
+  },
 };
 
 import { db } from "@/lib/db";

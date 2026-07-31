@@ -54,9 +54,37 @@ export default function AboutPage() {
     ],
   };
 
+  const aboutPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Ready Game Code",
+    "url": `${baseUrl}/about`,
+    "description": "Engineering the future of game development with vetted Unity templates and source code.",
+    "mainEntity": organizationSchema
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About Us",
+        "item": `${baseUrl}/about`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden pb-16">
-      <JsonLd data={organizationSchema} />
+      <JsonLd data={[organizationSchema, aboutPageSchema, breadcrumbSchema]} />
 
       {/* Hero Section */}
       <section className="relative py-16 md:py-24 bg-gradient-to-b from-primary/10 via-background to-background border-b border-border">

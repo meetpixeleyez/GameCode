@@ -3,6 +3,13 @@ import { PolicyLayout } from "@/components/policy/policy-layout";
 export const metadata = {
   title: "Privacy Policy",
   description: "How Ready Game Code collects, uses, and protects your personal information.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
+  openGraph: {
+    title: "Privacy Policy | Ready Game Code",
+    description: "How Ready Game Code collects, uses, and protects your personal information.",
+  },
 };
 
 import { db } from "@/lib/db";
