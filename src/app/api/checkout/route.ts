@@ -5,6 +5,7 @@ import { z } from "zod";
 import Razorpay from "razorpay";
 import { revalidatePath } from "next/cache";
 import { getPaymentCredentials } from "@/lib/payment-settings";
+import { createPayPalOrder } from "@/lib/paypal";
 
 const checkoutSchema = z.object({
   gateway: z.enum(["razorpay", "paypal", "manual_upi", "wallet"]),
@@ -136,6 +137,50 @@ export async function POST(req: NextRequest) {
         provider: "razorpay",
         razorpayOrderId: razorpayOrder.id,
         amount: amountInPaise,
+        internalOrderId: pendingOrder.id,
+        trx: pendingOrder.trx,
+      });
+    }
+
+    if (gateway === "paypal") {
+      const paypalOrder = await createPayPalOrder(amount, "USD", trx);
+
+      const pendingOrder = await db.$transaction(async (tx) => {
+        const order = await tx.order.create({
+          data: {
+            userId,
+            amount,
+            discount: 0,
+            trx,
+            paymentStatus: 0, // Pending
+          },
+        });
+
+        await tx.deposit.create({
+          data: {
+            userId,
+            orderId: order.id,
+            methodCode,
+            methodCurrency,
+            amount,
+            charge: 0,
+            rate: 1,
+            finalAmount: amount,
+            trx,
+            status: 0, // Pending
+            successUrl: "/checkout/thank-you",
+            failedUrl: "/checkout",
+          },
+        });
+        return order;
+      });
+
+      return NextResponse.json({
+        success: true,
+        provider: "paypal",
+        paypalOrderId: paypalOrder.id,
+        clientId: paymentCreds.paypalClientId,
+        amount,
         internalOrderId: pendingOrder.id,
         trx: pendingOrder.trx,
       });

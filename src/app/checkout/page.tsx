@@ -20,6 +20,14 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CartItem {
   id: string;
@@ -69,6 +77,7 @@ export default function CheckoutPage() {
     paypalEnabled: true,
     paypalClientId: "",
   });
+  const [paypalModalOpen, setPaypalModalOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -134,7 +143,6 @@ export default function CheckoutPage() {
           description: "Purchase Digital Assets",
           order_id: json.razorpayOrderId,
           handler: async function (response: any) {
-            // Verify payment
             try {
               const verifyRes = await fetch("/api/checkout/verify", {
                 method: "POST",
@@ -170,6 +178,71 @@ export default function CheckoutPage() {
           setProcessing(false);
         });
         rzp.open();
+      } else if (json.provider === "paypal") {
+        const clientId = json.clientId || paymentMethods.paypalClientId || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+        if (!clientId) {
+          toast({ title: "PayPal Config Error", description: "PayPal Client ID is missing. Contact site admin.", variant: "destructive" });
+          setProcessing(false);
+          return;
+        }
+
+        const scriptId = "paypal-sdk-script";
+        const renderPayPalButtons = () => {
+          setProcessing(false);
+          const paypal = (window as any).paypal;
+          if (!paypal || !paypal.Buttons) {
+            toast({ title: "PayPal SDK Error", description: "Could not load PayPal buttons.", variant: "destructive" });
+            return;
+          }
+
+          setPaypalModalOpen(true);
+          setTimeout(() => {
+            const container = document.getElementById("paypal-button-container");
+            if (container) {
+              container.innerHTML = "";
+              paypal.Buttons({
+                createOrder: () => json.paypalOrderId,
+                onApprove: async (data: any) => {
+                  try {
+                    const verifyRes = await fetch("/api/checkout/paypal-verify", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        paypalOrderId: data.orderID,
+                        internalOrderId: json.internalOrderId,
+                      }),
+                    });
+                    const verifyJson = await verifyRes.json();
+                    if (!verifyRes.ok) throw new Error(verifyJson.error);
+                    
+                    toast({ title: "PayPal Payment successful!", description: "Redirecting to confirmation..." });
+                    window.location.href = verifyJson.redirectUrl;
+                  } catch (err: any) {
+                    toast({ title: "PayPal Verification failed", description: err.message, variant: "destructive" });
+                  }
+                },
+                onError: (err: any) => {
+                  toast({ title: "PayPal Error", description: err?.message || "Payment cancelled", variant: "destructive" });
+                },
+              }).render("#paypal-button-container");
+            }
+          }, 200);
+        };
+
+        let script = document.getElementById(scriptId) as HTMLScriptElement;
+        if (!script) {
+          script = document.createElement("script");
+          script.id = scriptId;
+          script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+          script.onload = renderPayPalButtons;
+          script.onerror = () => {
+            toast({ title: "PayPal SDK Error", description: "Failed to connect to PayPal API.", variant: "destructive" });
+            setProcessing(false);
+          };
+          document.body.appendChild(script);
+        } else {
+          renderPayPalButtons();
+        }
       } else {
         toast({ title: "Payment successful!", description: "Redirecting to confirmation..." });
         window.location.href = json.redirectUrl;
@@ -292,7 +365,9 @@ export default function CheckoutPage() {
                 value="manual_upi"
                 icon={Smartphone}
                 title="Google Pay / UPI"
-                description="Manual UPI transfer — admin verifies payment within 24 hours"
+                description="Direct manual UPI transfer integration"
+                badge="Coming Soon"
+                disabled={true}
                 checked={gateway === "manual_upi"}
               />
               {user && (
@@ -394,6 +469,25 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={paypalModalOpen} onOpenChange={setPaypalModalOpen}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-xl font-bold">
+              Pay with PayPal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Complete your purchase securely via PayPal or Credit/Debit Card.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 flex flex-col items-center justify-center min-h-[160px] w-full">
+            <div id="paypal-button-container" className="w-full max-w-sm" />
+          </div>
+          <div className="flex justify-end">
+            <AlertDialogCancel onClick={() => setPaypalModalOpen(false)}>Cancel</AlertDialogCancel>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -435,7 +529,13 @@ function PaymentOption({
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm">{title}</span>
           {badge && (
-            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+            <span
+              className={`text-xs px-2 py-0.5 rounded font-medium ${
+                disabled
+                  ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                  : "bg-primary/10 text-primary"
+              }`}
+            >
               {badge}
             </span>
           )}
