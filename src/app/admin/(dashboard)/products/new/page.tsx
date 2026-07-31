@@ -27,6 +27,7 @@ export default function AdminNewProductPage() {
     price: "",
     priceCl: "",
     demoUrl: "",
+    demoApk: "",
     previewVideo: "",
     tags: [] as string[],
     metaTitle: "",

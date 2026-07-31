@@ -48,6 +48,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
 
   const [form, setForm] = useState({
     ...initialData,
+    demoUrl: initialData.demoUrl || "",
     demoApk: initialData.demoApk || "",
     tags: initialData.tags ? initialData.tags.split(",").map(t => t.trim()).filter(Boolean) : [] as string[],
   });
@@ -356,14 +357,14 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                 id="demoApk"
                 type="url"
                 placeholder="https://drive.google.com/file/d/... or APK URL"
-                value={form.demoApk}
-                onChange={(e) => setForm({ ...form, demoApk: e.target.value })}
+                value={form.demoApk || form.demoUrl}
+                onChange={(e) => setForm({ ...form, demoApk: e.target.value, demoUrl: e.target.value })}
               />
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-4">
                   <Label htmlFor="demoApkFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
                     <Upload className="w-4 h-4 mr-2" />
-                    {existingDemoApk || form.demoApk ? "Upload APK File Instead" : "Upload APK File"}
+                    {existingDemoApk || form.demoApk || form.demoUrl ? "Upload APK File Instead" : "Upload APK File"}
                   </Label>
                   <Input id="demoApkFile" type="file" accept=".apk,.zip,.rar" className="hidden" onChange={(e) => {
                     if (e.target.files && e.target.files[0]) setDemoApkFile(e.target.files[0]);
