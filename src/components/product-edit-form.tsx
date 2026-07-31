@@ -25,6 +25,7 @@ interface ProductEditFormProps {
     price: string;
     priceCl: string;
     demoUrl: string;
+    demoApk?: string;
     previewVideo: string;
     thumbnail: string;
     file: string;
@@ -47,6 +48,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
 
   const [form, setForm] = useState({
     ...initialData,
+    demoApk: initialData.demoApk || "",
     tags: initialData.tags ? initialData.tags.split(",").map(t => t.trim()).filter(Boolean) : [] as string[],
   });
 
@@ -56,11 +58,13 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
   // File states
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [mainFile, setMainFile] = useState<File | null>(null);
+  const [demoApkFile, setDemoApkFile] = useState<File | null>(null);
   const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
   
   // Existing files
   const [existingThumbnail, setExistingThumbnail] = useState(initialData.thumbnail);
   const [existingMainFile, setExistingMainFile] = useState(initialData.file);
+  const [existingDemoApk, setExistingDemoApk] = useState(initialData.demoApk || "");
   const [existingScreenshots, setExistingScreenshots] = useState<string[]>([]);
 
   useEffect(() => {
@@ -90,6 +94,7 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
     const formData = new FormData();
     if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
     if (mainFile) formData.append("file", mainFile);
+    if (demoApkFile) formData.append("demoApk", demoApkFile);
     
     if (screenshotsFiles.length > 0) {
       for (let i = 0; i < screenshotsFiles.length; i++) {
@@ -124,9 +129,10 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
     try {
       let finalThumbnail = existingThumbnail;
       let finalMainFile = existingMainFile;
+      let finalDemoApk = existingDemoApk;
       let finalScreenshots = [...existingScreenshots];
 
-      if (thumbnailFile || mainFile || screenshotsFiles.length > 0) {
+      if (thumbnailFile || mainFile || demoApkFile || screenshotsFiles.length > 0) {
         toast({ title: "Uploading files...", description: "Please wait while we upload new files." });
         const uploadedFiles = await uploadFiles();
         if (uploadedFiles.thumbnail) {
@@ -138,6 +144,11 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
           finalMainFile = uploadedFiles.file;
           setExistingMainFile(finalMainFile);
           setMainFile(null);
+        }
+        if (uploadedFiles.demoApk) {
+          finalDemoApk = uploadedFiles.demoApk;
+          setExistingDemoApk(finalDemoApk);
+          setDemoApkFile(null);
         }
         
         if (uploadedFiles.inlinePreviewImage) {
@@ -160,9 +171,10 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
           reskinPrice: parseFloat(form.reskinPrice) || 0,
           publishPrice: parseFloat(form.publishPrice) || 0,
           storeOptimizationPrice: parseFloat(form.storeOptimizationPrice) || 0,
-          tags: form.tags,
           thumbnail: finalThumbnail,
           file: finalMainFile,
+          demoApk: finalDemoApk,
+          tags: form.tags,
           inlinePreviewImage: JSON.stringify(finalScreenshots),
         }),
       });
@@ -336,6 +348,42 @@ export default function ProductEditForm({ initialData, isAdmin }: ProductEditFor
                   </div>
                 ) : null}
               </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Label htmlFor="demoApk">Demo APK / Google Drive Link</Label>
+              <Input
+                id="demoApk"
+                type="url"
+                placeholder="https://drive.google.com/file/d/... or APK URL"
+                value={form.demoApk}
+                onChange={(e) => setForm({ ...form, demoApk: e.target.value })}
+              />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="demoApkFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    {existingDemoApk || form.demoApk ? "Upload APK File Instead" : "Upload APK File"}
+                  </Label>
+                  <Input id="demoApkFile" type="file" accept=".apk,.zip,.rar" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setDemoApkFile(e.target.files[0]);
+                  }} />
+                  {!demoApkFile && !existingDemoApk && <span className="text-sm text-muted-foreground">Optional</span>}
+                </div>
+                {demoApkFile ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4">{demoApkFile.name}</span>
+                    <button type="button" onClick={() => setDemoApkFile(null)} className="cursor-pointer text-muted-foreground hover:text-destructive"><X className="w-4 h-4" /></button>
+                  </div>
+                ) : existingDemoApk ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4 text-blue-600 font-medium">
+                      {existingDemoApk.split('/').pop()}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">Provide a Google Drive link or upload an APK file for prospective buyers to test for free before purchasing.</p>
             </div>
             
             <div className="space-y-3">

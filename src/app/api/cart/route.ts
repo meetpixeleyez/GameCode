@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
     const product = await db.product.findUnique({
       where: { id: productId, status: 1 },
       include: { 
+        user: true,
         category: true,
         campaignProducts: {
           include: { campaign: true }
@@ -189,7 +190,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        cartItem: cart,
+        cartItem: {
+          ...cart,
+          product: {
+            id: product.id,
+            title: product.title,
+            thumbnail: product.thumbnail,
+            user: {
+              username: product.user?.username || "Ready Game Code",
+            },
+          },
+        },
         cartCount: count,
       },
       { status: 201 }

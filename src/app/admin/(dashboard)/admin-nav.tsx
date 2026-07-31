@@ -16,6 +16,7 @@ import {
   Undo2,
   ShoppingBag,
   DollarSign,
+  CreditCard,
 } from "lucide-react";
 
 import { useNotifications } from "@/hooks/use-notifications";
@@ -32,6 +33,7 @@ export const adminNavItems = [
   { href: "/admin/refunds", label: "Refunds", icon: Undo2 },
   { href: "/admin/blog", label: "Blog", icon: FileText },
   { href: "/admin/support", label: "Helpdesk", icon: LifeBuoy },
+  { href: "/admin/settings/payment", label: "Payment Settings", icon: CreditCard },
 ];
 
 export function AdminNav() {

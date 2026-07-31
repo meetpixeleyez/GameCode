@@ -67,6 +67,7 @@ const updateProductSchema = z.object({
   price: z.number().min(0).optional(),
   priceCl: z.number().min(0).optional(),
   demoUrl: z.string().url().optional().or(z.literal("")),
+  demoApk: z.string().optional().or(z.literal("")),
   previewVideo: z.string().optional().or(z.literal("")),
   thumbnail: z.string().optional().or(z.literal("")),
   file: z.string().optional().or(z.literal("")),

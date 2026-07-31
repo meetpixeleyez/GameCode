@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { AddedToCartModal, AddedItemDetails } from "@/components/product/added-to-cart-modal";
+
 interface AddToCartOptions {
   productId: string;
   license?: "1" | "2";
@@ -22,6 +24,9 @@ interface AddToCartOptions {
 export function useAddToCart() {
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [addedItem, setAddedItem] = useState<AddedItemDetails | null>(null);
+
   const { toast } = useToast();
   const router = useRouter();
 
@@ -65,15 +70,27 @@ export function useAddToCart() {
         }
 
         setAdded(true);
-        toast({
-          title: "Added to cart!",
-          description: "Item added successfully.",
-        });
 
-        // Refresh router to update cart counter in header (future)
+        // Prepare item details for the popup modal
+        if (data.cartItem) {
+          const item = data.cartItem;
+          const product = item.product || {};
+          const authorName = product.user?.username || "Ready Game Code";
+          setAddedItem({
+            title: item.title || product.title || "Item",
+            authorName,
+            price: item.price ?? 0,
+            thumbnail: product.thumbnail,
+          });
+          setModalOpen(true);
+        } else {
+          toast({
+            title: "Added to cart!",
+            description: "Item added successfully.",
+          });
+        }
+
         router.refresh();
-
-        // Reset "added" state after 2 seconds
         setTimeout(() => setAdded(false), 2000);
       } catch {
         toast({
@@ -88,7 +105,7 @@ export function useAddToCart() {
     [toast, router]
   );
 
-  return { addToCart, loading, added };
+  return { addToCart, loading, added, modalOpen, setModalOpen, addedItem };
 }
 
 export function AddToCartButton({
@@ -103,33 +120,41 @@ export function AddToCartButton({
   className = "",
   label = "Add to Cart",
 }: AddToCartOptions) {
-  const { addToCart, loading, added } = useAddToCart();
+  const { addToCart, loading, added, modalOpen, setModalOpen, addedItem } = useAddToCart();
 
   return (
-    <Button
-      variant={variant}
-      size={size}
-      className={className}
-      disabled={loading}
-      onClick={() =>
-        addToCart({
-          productId,
-          license,
-          reskinSelected,
-          publishSelected,
-          storeOptimizationSelected,
-          isExtended,
-        })
-      }
-    >
-      {loading ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : added ? (
-        <Check className="mr-2 h-4 w-4" />
-      ) : (
-        <ShoppingCart className="mr-2 h-4 w-4" />
-      )}
-      {added ? "Added!" : label}
-    </Button>
+    <>
+      <Button
+        variant={variant}
+        size={size}
+        className={className}
+        disabled={loading}
+        onClick={() =>
+          addToCart({
+            productId,
+            license,
+            reskinSelected,
+            publishSelected,
+            storeOptimizationSelected,
+            isExtended,
+          })
+        }
+      >
+        {loading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : added ? (
+          <Check className="mr-2 h-4 w-4" />
+        ) : (
+          <ShoppingCart className="mr-2 h-4 w-4" />
+        )}
+        {added ? "Added!" : label}
+      </Button>
+
+      <AddedToCartModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        item={addedItem}
+      />
+    </>
   );
 }

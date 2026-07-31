@@ -39,12 +39,14 @@ export default function AdminNewProductPage() {
   // File states
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [mainFile, setMainFile] = useState<File | null>(null);
+  const [demoApkFile, setDemoApkFile] = useState<File | null>(null);
   const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
   
   // Track uploaded URLs to prevent duplicate uploads on validation failure
   const [uploadedUrls, setUploadedUrls] = useState<any>({
     thumbnail: "",
     file: "",
+    demoApk: "",
     inlinePreviewImage: [] as string[]
   });
 
@@ -65,6 +67,7 @@ export default function AdminNewProductPage() {
     const formData = new FormData();
     if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
     if (mainFile) formData.append("file", mainFile); // Admins upload directly to active file
+    if (demoApkFile) formData.append("demoApk", demoApkFile);
     
     if (screenshotsFiles.length > 0) {
       for (let i = 0; i < screenshotsFiles.length; i++) {
@@ -103,12 +106,13 @@ export default function AdminNewProductPage() {
     try {
       let finalUrls = { ...uploadedUrls };
       
-      if (thumbnailFile || mainFile || screenshotsFiles.length > 0) {
+      if (thumbnailFile || mainFile || demoApkFile || screenshotsFiles.length > 0) {
         toast({ title: "Uploading files...", description: "Please wait while we upload your files." });
         const newUploadedFiles = await uploadFiles();
         
         if (newUploadedFiles.thumbnail) finalUrls.thumbnail = newUploadedFiles.thumbnail;
         if (newUploadedFiles.file) finalUrls.file = newUploadedFiles.file;
+        if (newUploadedFiles.demoApk) finalUrls.demoApk = newUploadedFiles.demoApk;
         if (newUploadedFiles.inlinePreviewImage) {
            const newScreenshots = Array.isArray(newUploadedFiles.inlinePreviewImage) 
               ? newUploadedFiles.inlinePreviewImage 
@@ -119,6 +123,7 @@ export default function AdminNewProductPage() {
         setUploadedUrls(finalUrls);
         setThumbnailFile(null);
         setMainFile(null);
+        setDemoApkFile(null);
         setScreenshotsFiles([]);
       }
 
@@ -135,6 +140,7 @@ export default function AdminNewProductPage() {
           tags: form.tags,
           thumbnail: finalUrls.thumbnail,
           file: finalUrls.file,
+          demoApk: finalUrls.demoApk || "",
           inlinePreviewImage: JSON.stringify(finalUrls.inlinePreviewImage),
         }),
       });
@@ -309,6 +315,43 @@ export default function AdminNewProductPage() {
                 ) : null}
               </div>
               <p className="text-xs text-muted-foreground">ZIP all the files for buyers.</p>
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="demoApk">Demo APK / Google Drive Link</Label>
+              <Input
+                id="demoApk"
+                type="url"
+                placeholder="https://drive.google.com/file/d/... or APK URL"
+                value={form.demoUrl}
+                onChange={(e) => setForm({ ...form, demoUrl: e.target.value })}
+              />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="demoApkFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload APK File Instead
+                  </Label>
+                  <Input id="demoApkFile" type="file" accept=".apk,.zip,.rar" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setDemoApkFile(e.target.files[0]);
+                  }} />
+                  {!demoApkFile && !uploadedUrls.demoApk && <span className="text-sm text-muted-foreground">Optional</span>}
+                </div>
+                {demoApkFile ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4">{demoApkFile.name}</span>
+                    <button type="button" onClick={() => setDemoApkFile(null)} className="text-muted-foreground hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : uploadedUrls.demoApk ? (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4 text-blue-600 font-medium">
+                      {uploadedUrls.demoApk.split('/').pop()}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+              <p className="text-xs text-muted-foreground">Provide a Google Drive link or upload an APK file for prospective buyers to test for free before purchasing.</p>
             </div>
             <div className="space-y-3">
               <Label>Screenshots</Label>

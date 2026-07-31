@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { Badge } from "@/components/ui/badge";
-import { UserActions } from "./user-actions";
-import { formatCurrency } from "@/lib/utils";
 import { UserSearch } from "./user-search";
+import { UserTable } from "./user-table";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +31,23 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const users = await db.user.findMany({
     where: whereClause,
     orderBy: { createdAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      firstname: true,
+      lastname: true,
+      username: true,
+      email: true,
+      dialCode: true,
+      mobile: true,
+      countryName: true,
+      countryCode: true,
+      role: true,
+      isAuthor: true,
+      balance: true,
+      status: true,
+      totalSold: true,
+      totalSoldAmount: true,
+      createdAt: true,
       _count: {
         select: { products: true, orders: true }
       }
@@ -51,7 +65,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Users Management</h1>
           <p className="text-muted-foreground mt-1">
-            Review and manage buyers and sellers.
+            Review and manage buyers and sellers. Click on any user row to view details.
           </p>
         </div>
         <UserSearch />
@@ -96,67 +110,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
             No users found.
           </div>
         ) : (
-          <div className="overflow-x-auto overflow-y-auto max-h-[500px] min-h-[460px] relative">
-            <table className="w-full text-sm text-left border-collapse">
-              <thead className="text-xs text-muted-foreground bg-muted/95 backdrop-blur-xs uppercase border-b border-border sticky top-0 z-10 shadow-2xs">
-                <tr>
-                  <th className="px-6 py-4 font-medium">User</th>
-                  <th className="px-6 py-4 font-medium">Role</th>
-                  <th className="px-6 py-4 font-medium">Balance</th>
-                  <th className="px-6 py-4 font-medium">Stats</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="font-bold text-primary">
-                            {(user.firstname || user.username || "U").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-medium truncate">
-                            {user.firstname} {user.lastname}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {user.email} &middot; {user.username}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {user.isAuthor === 1 ? (
-                        <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">Seller</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-slate-500/10 text-slate-500 border-slate-500/20">Buyer</Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {formatCurrency(user.balance || 0)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-muted-foreground">
-                      <div>Orders: {user._count.orders}</div>
-                      {user.isAuthor === 1 && <div>Products: {user._count.products}</div>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {user.status === 1 ? (
-                        <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white">Active</Badge>
-                      ) : (
-                        <Badge variant="destructive">Banned</Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <UserActions userId={user.id} currentStatus={user.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <UserTable users={users} />
         )}
       </div>
     </div>

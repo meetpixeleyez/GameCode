@@ -4,12 +4,13 @@ import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 import Razorpay from "razorpay";
 import { revalidatePath } from "next/cache";
+import { getPaymentCredentials } from "@/lib/payment-settings";
 
 const checkoutSchema = z.object({
   gateway: z.enum(["razorpay", "paypal", "manual_upi", "wallet"]),
 });
 
-// POST /api/checkout/process — initializes Razorpay order
+// POST /api/checkout/process — initializes Razorpay / PayPal order
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -19,6 +20,8 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    const paymentCreds = await getPaymentCredentials();
 
     const body = await req.json();
     const parsed = checkoutSchema.safeParse(body);
@@ -30,6 +33,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { gateway } = parsed.data;
+
+    if (gateway === "razorpay" && !paymentCreds.razorpayEnabled) {
+      return NextResponse.json({ error: "Razorpay is currently disabled by administrator" }, { status: 400 });
+    }
+    if (gateway === "paypal" && !paymentCreds.paypalEnabled) {
+      return NextResponse.json({ error: "PayPal is currently disabled by administrator" }, { status: 400 });
+    }
+
     const userId = user.sub;
 
     // Load cart items
@@ -74,8 +85,8 @@ export async function POST(req: NextRequest) {
 
     if (gateway === "razorpay") {
       const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID || "dummy_key",
-        key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy_secret",
+        key_id: paymentCreds.razorpayKeyId || "dummy_key",
+        key_secret: paymentCreds.razorpayKeySecret || "dummy_secret",
       });
 
       // Amount in paise
@@ -85,6 +96,7 @@ export async function POST(req: NextRequest) {
         amount: amountInPaise,
         currency: "INR",
         receipt: trx,
+        payment_capture: true, // Auto-capture payment upon successful authorization
       });
 
       // Create PENDING order and deposit

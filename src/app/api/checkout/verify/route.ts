@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import crypto from "crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { getPaymentCredentials } from "@/lib/payment-settings";
 
 const verifySchema = z.object({
   razorpay_payment_id: z.string(),
@@ -38,7 +39,8 @@ export async function POST(req: NextRequest) {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, internalOrderId } = parsed.data;
 
     // Verify signature
-    const secret = process.env.RAZORPAY_KEY_SECRET || "";
+    const paymentCreds = await getPaymentCredentials();
+    const secret = paymentCreds.razorpayKeySecret;
     const generated_signature = crypto
       .createHmac("sha256", secret)
       .update(razorpay_order_id + "|" + razorpay_payment_id)

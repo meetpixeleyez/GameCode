@@ -16,6 +16,15 @@ const registerSchema = z
     firstname: z.string().min(1, "First name is required"),
     lastname: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email").toLowerCase(),
+    countryName: z.string().min(1, "Country is required"),
+    state: z.string().min(1, "State is required"),
+    city: z.string().min(1, "City is required"),
+    dialCode: z.string().min(1, "Dial code is required"),
+    mobile: z
+      .string()
+      .min(6, "Phone number must be at least 6 digits")
+      .max(15, "Phone number cannot exceed 15 digits")
+      .regex(/^[0-9]+$/, "Phone number must contain numbers only"),
     password: z
       .string()
       .min(6, "Password must be at least 6 characters")
@@ -48,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { firstname, lastname, email, password, refBy, role } = parsed.data;
+    const { firstname, lastname, email, countryName, state, city, dialCode, mobile, password, refBy, role } = parsed.data;
 
     // Check if email already exists
     const existing = await db.user.findUnique({ where: { email } });
@@ -86,6 +95,11 @@ export async function POST(req: NextRequest) {
       firstname,
       lastname,
       username,
+      countryName,
+      state,
+      city,
+      dialCode,
+      mobile,
       password: hashedPassword,
       role: role === "seller" ? 1 : 0,
       otp,

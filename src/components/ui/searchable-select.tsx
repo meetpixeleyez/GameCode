@@ -75,9 +75,9 @@ export function SearchableSelect({
           <CommandList className="max-h-60 overflow-y-auto p-1">
             <CommandEmpty className="py-3 text-center text-xs text-muted-foreground">{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((item) => (
+              {options.map((item, index) => (
                 <CommandItem
-                  key={item.value}
+                  key={`${item.value}-${index}`}
                   value={item.label}
                   onSelect={() => {
                     onValueChange(item.value);

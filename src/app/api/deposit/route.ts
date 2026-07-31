@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
       amount: amountInPaise,
       currency: "INR",
       receipt: trx,
+      payment_capture: true, // Auto-capture payment upon successful authorization
     });
 
     // Create pending Deposit record

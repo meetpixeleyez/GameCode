@@ -11,8 +11,10 @@ export default async function SellerProductEditPage({ params }: { params: Promis
 
   const { id } = await params;
 
-  const product = await db.product.findUnique({
-    where: { id },
+  const product = await db.product.findFirst({
+    where: {
+      OR: [{ id }, { slug: id }],
+    },
   });
 
   if (!product || product.userId !== session.sub) {
@@ -25,6 +27,7 @@ export default async function SellerProductEditPage({ params }: { params: Promis
     try {
       const parsed = JSON.parse(product.tags);
       if (Array.isArray(parsed)) tags = parsed.join(", ");
+      else tags = String(parsed);
     } catch {
       tags = product.tags;
     }
@@ -34,11 +37,12 @@ export default async function SellerProductEditPage({ params }: { params: Promis
     id: product.id,
     categoryId: product.categoryId || "",
     subCategoryId: product.subCategoryId || "",
-    title: product.title,
+    title: product.title || "",
     description: product.description || "",
-    price: product.price.toString(),
-    priceCl: product.priceCl.toString(),  
+    price: (product.price ?? 0).toString(),
+    priceCl: (product.priceCl ?? 0).toString(),  
     demoUrl: product.demoUrl || "",
+    demoApk: product.demoApk || "",
     previewVideo: product.previewVideo || "",
     thumbnail: product.thumbnail || "",
     file: product.file || "",
@@ -46,9 +50,9 @@ export default async function SellerProductEditPage({ params }: { params: Promis
     tags,
     metaTitle: product.metaTitle || "",
     metaDescription: product.metaDescription || "",
-    reskinPrice: product.reskinPrice.toString(),
-    publishPrice: product.publishPrice.toString(),
-    storeOptimizationPrice: product.storeOptimizationPrice.toString(),
+    reskinPrice: (product.reskinPrice ?? 0).toString(),
+    publishPrice: (product.publishPrice ?? 0).toString(),
+    storeOptimizationPrice: (product.storeOptimizationPrice ?? 0).toString(),
   };
 
   return <ProductEditForm initialData={initialData} isAdmin={false} />;

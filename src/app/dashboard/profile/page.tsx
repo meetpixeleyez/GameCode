@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, User, Mail, Phone, Globe, Shield } from "lucide-react";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Badge } from "@/components/ui/badge";
+import { COUNTRIES, STATES_AND_CITIES } from "@/lib/countries";
 
 interface UserData {
   id: string;
@@ -18,6 +21,8 @@ interface UserData {
   dialCode: string | null;
   mobile: string | null;
   countryName: string | null;
+  state: string | null;
+  city: string | null;
 }
 
 export default function ProfilePage() {
@@ -85,131 +90,209 @@ export default function ProfilePage() {
     return <p className="text-sm text-muted-foreground">Could not load profile.</p>;
   }
 
+  const dialCodeOptions = COUNTRIES.map((c) => ({
+    value: c.dialCode,
+    label: `${c.flag} ${c.dialCode} (${c.name})`,
+  }));
+
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.name,
+    label: c.name,
+  }));
+
+  const initials = (form.firstname || form.username || form.email || "U").charAt(0).toUpperCase();
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Profile Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Update your personal information and account details
-        </p>
+    <div className="max-w-4xl mx-auto space-y-8 pb-12">
+      {/* Header Profile Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background border p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 shadow-sm">
+        <div className="w-20 h-20 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-3xl font-bold shadow-md shrink-0 ring-4 ring-background">
+          {initials}
+        </div>
+        <div className="text-center sm:text-left space-y-1">
+          <div className="flex items-center justify-center sm:justify-start gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              {form.firstname || form.lastname
+                ? `${form.firstname || ''} ${form.lastname || ''}`.trim()
+                : form.username || "My Account"}
+            </h1>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+              Verified
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">{form.email}</p>
+          <p className="text-xs text-muted-foreground/80 flex items-center justify-center sm:justify-start gap-1 pt-1">
+            <Globe className="h-3.5 w-3.5" />
+            {[form.city, form.state, form.countryName].filter(Boolean).join(", ") || "Location not set"}
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
               Personal Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstname">First Name</Label>
+                <Label htmlFor="firstname" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">First Name</Label>
                 <Input
                   id="firstname"
+                  placeholder="John"
                   value={form.firstname || ""}
                   onChange={(e) => setForm({ ...form, firstname: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastname">Last Name</Label>
+                <Label htmlFor="lastname" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Last Name</Label>
                 <Input
                   id="lastname"
+                  placeholder="Doe"
                   value={form.lastname || ""}
                   onChange={(e) => setForm({ ...form, lastname: e.target.value })}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Username</Label>
               <Input
                 id="username"
+                placeholder="johndoe"
                 value={form.username || ""}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Your username appears on your public author profile.
+                Your username appears on your public author profile and product comments.
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Contact Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Mail className="h-5 w-5 text-primary" />
               Contact Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 value={form.email || ""}
                 disabled
-                className="bg-muted"
+                className="bg-muted/50 cursor-not-allowed"
               />
               <p className="text-xs text-muted-foreground">
-                Email cannot be changed. Contact support if needed.
+                Email address is verified and cannot be changed.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dialCode">Dial Code</Label>
-                <Input
-                  id="dialCode"
-                  placeholder="+91"
-                  value={form.dialCode || ""}
-                  onChange={(e) => setForm({ ...form, dialCode: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="mobile">Mobile Number</Label>
-                <Input
-                  id="mobile"
-                  placeholder="9408212310"
-                  value={form.mobile || ""}
-                  onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-                />
+
+            <div className="space-y-2">
+              <Label htmlFor="mobile" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Phone Number *</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="sm:col-span-1">
+                  <SearchableSelect
+                    options={dialCodeOptions}
+                    value={form.dialCode || "+91"}
+                    onValueChange={(val) => {
+                      const selected = COUNTRIES.find((c) => c.dialCode === val);
+                      setForm({
+                        ...form,
+                        dialCode: val,
+                        countryName: selected ? selected.name : form.countryName,
+                      });
+                    }}
+                    placeholder="Dial code"
+                    searchPlaceholder="Search country code..."
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Input
+                    id="mobile"
+                    type="tel"
+                    placeholder="9876543210"
+                    value={form.mobile || ""}
+                    onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/[^0-9]/g, "") })}
+                  />
+                </div>
               </div>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="countryName">Country</Label>
-              <Input
+              <Label htmlFor="countryName" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">Country *</Label>
+              <SearchableSelect
                 id="countryName"
-                value={form.countryName || ""}
-                onChange={(e) => setForm({ ...form, countryName: e.target.value })}
-                placeholder="E.g. India"
+                options={countryOptions}
+                value={form.countryName || "India"}
+                onValueChange={(val) => {
+                  const selected = COUNTRIES.find((c) => c.name === val);
+                  setForm({
+                    ...form,
+                    countryName: val,
+                    dialCode: selected ? selected.dialCode : form.dialCode,
+                  });
+                }}
+                placeholder="Select Country"
+                searchPlaceholder="Search country..."
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="state" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">State *</Label>
+                <Input
+                  id="state"
+                  placeholder="e.g. California / Gujarat"
+                  value={form.state || ""}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city" className="text-xs font-medium uppercase text-muted-foreground tracking-wider">City *</Label>
+                <Input
+                  id="city"
+                  placeholder="e.g. Los Angeles / Surat"
+                  value={form.city || ""}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Security */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Security
+              Security Settings
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <Button variant="outline" asChild>
+          <CardContent className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Password</p>
+              <p className="text-xs text-muted-foreground">Change your account password securely anytime.</p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
               <a href="/forgot-password">Change Password</a>
             </Button>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 pt-2">
           <Button variant="outline" type="button" onClick={() => setForm(user)}>
-            Reset
+            Reset Changes
           </Button>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} className="px-6 min-w-[140px]">
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -218,7 +301,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save Changes
+                Save Profile
               </>
             )}
           </Button>

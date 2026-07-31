@@ -64,15 +64,38 @@ export default function CheckoutPage() {
   const [processing, setProcessing] = useState(false);
   const [gateway, setGateway] = useState<Gateway>("razorpay");
   const [user, setUser] = useState<{ email: string; firstname?: string | null; lastname?: string | null; balance: number } | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState({
+    razorpayEnabled: true,
+    paypalEnabled: true,
+    paypalClientId: "",
+  });
 
   useEffect(() => {
     Promise.all([
       fetch("/api/cart").then((r) => r.json()),
       fetch("/api/auth/me").then((r) => r.json()),
+      fetch("/api/payment-methods").then((r) => r.json()).catch(() => ({ razorpayEnabled: true, paypalEnabled: true })),
     ])
-      .then(([cartData, userData]) => {
+      .then(([cartData, userData, methodsData]) => {
         setData(cartData);
         setUser(userData.user);
+        if (methodsData) {
+          setPaymentMethods({
+            razorpayEnabled: methodsData.razorpayEnabled ?? true,
+            paypalEnabled: methodsData.paypalEnabled ?? true,
+            paypalClientId: methodsData.paypalClientId || "",
+          });
+
+          // Set active default gateway based on enabled methods
+          if (methodsData.razorpayEnabled) {
+            setGateway("razorpay");
+          } else if (methodsData.paypalEnabled) {
+            setGateway("paypal");
+          } else {
+            setGateway("wallet");
+          }
+        }
+
         if (!userData.user) {
           router.push("/login?redirect=/checkout");
         }
@@ -246,21 +269,25 @@ export default function CheckoutPage() {
               onValueChange={(v) => setGateway(v as Gateway)}
               className="space-y-3"
             >
-              <PaymentOption
-                value="razorpay"
-                icon={CreditCard}
-                title="Razorpay"
-                description="Pay via UPI, cards, net banking, or wallets (INR)"
-                badge="Recommended for India"
-                checked={gateway === "razorpay"}
-              />
-              <PaymentOption
-                value="paypal"
-                icon={CreditCard}
-                title="PayPal"
-                description="Pay with your PayPal account or credit card (USD)"
-                checked={gateway === "paypal"}
-              />
+              {paymentMethods.razorpayEnabled && (
+                <PaymentOption
+                  value="razorpay"
+                  icon={CreditCard}
+                  title="Razorpay"
+                  description="Pay via UPI, cards, net banking, or wallets (INR)"
+                  badge="Recommended for India"
+                  checked={gateway === "razorpay"}
+                />
+              )}
+              {paymentMethods.paypalEnabled && (
+                <PaymentOption
+                  value="paypal"
+                  icon={CreditCard}
+                  title="PayPal"
+                  description="Pay with your PayPal account or credit card (USD)"
+                  checked={gateway === "paypal"}
+                />
+              )}
               <PaymentOption
                 value="manual_upi"
                 icon={Smartphone}

@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, User, Store } from "lucide-react";
+import { COUNTRIES, STATES_AND_CITIES } from "@/lib/countries";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 function RegisterForm() {
   const router = useRouter();
@@ -33,6 +35,11 @@ function RegisterForm() {
     firstname: "",
     lastname: "",
     email: "",
+    countryName: "India",
+    state: "",
+    city: "",
+    dialCode: "+91",
+    mobile: "",
     password: "",
     confirmPassword: "",
     agree: false,
@@ -258,6 +265,89 @@ function RegisterForm() {
               placeholder="you@example.com"
               autoComplete="email"
             />
+          </div>
+
+          {/* Contact Information */}
+          <div className="space-y-2">
+            <Label htmlFor="mobile">Phone Number *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="sm:col-span-1">
+                <SearchableSelect
+                  options={COUNTRIES.map((c) => ({
+                    value: c.dialCode,
+                    label: `${c.flag} ${c.dialCode} (${c.name})`,
+                  }))}
+                  value={form.dialCode}
+                  onValueChange={(val) => {
+                    const selected = COUNTRIES.find((c) => c.dialCode === val);
+                    setForm({
+                      ...form,
+                      dialCode: val,
+                      countryName: selected ? selected.name : form.countryName,
+                    });
+                  }}
+                  placeholder="Dial code"
+                  searchPlaceholder="Search country..."
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Input
+                  id="mobile"
+                  type="tel"
+                  required
+                  placeholder="9876543210"
+                  value={form.mobile}
+                  onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/[^0-9]/g, "") })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="countryName">Country *</Label>
+            <SearchableSelect
+              id="countryName"
+              options={COUNTRIES.map((c) => ({
+                value: c.name,
+                label: c.name,
+              }))}
+              value={form.countryName}
+              onValueChange={(val) => {
+                const selected = COUNTRIES.find((c) => c.name === val);
+                setForm({
+                  ...form,
+                  countryName: val,
+                  dialCode: selected ? selected.dialCode : form.dialCode,
+                });
+              }}
+              placeholder="Select Country"
+              searchPlaceholder="Search country..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="state">State *</Label>
+              <Input
+                id="state"
+                type="text"
+                required
+                value={form.state}
+                onChange={(e) => setForm({ ...form, state: e.target.value })}
+                placeholder="e.g. California / Gujarat"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">City *</Label>
+              <Input
+                id="city"
+                type="text"
+                required
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                placeholder="e.g. Los Angeles / Surat"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

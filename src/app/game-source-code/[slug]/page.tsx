@@ -361,22 +361,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 }}
               />
 
-              {/* Demo */}
-              <div className="flex flex-wrap gap-3 mt-6">
-                {product.demoUrl && (
-                  <Button asChild variant="outline">
-                    <a
-                      href={product.demoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Live Preview
-                    </a>
-                  </Button>
-                )}
-              </div>
-
               {/* Video preview */}
               {youtubeEmbedUrl && (
                 <div className="mt-6">
@@ -462,6 +446,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               publishPrice: product.publishPrice,
               storeOptimizationPrice: product.storeOptimizationPrice,
               demoUrl: product.demoUrl,
+              demoApk: product.demoApk,
               category: product.category ? {
                 personalBuyerFee: product.category.personalBuyerFee,
                 commercialBuyerFee: product.category.commercialBuyerFee,

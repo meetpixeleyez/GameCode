@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useAddToCart } from "./add-to-cart";
+import { AddedToCartModal } from "./added-to-cart-modal";
 import {
   ShoppingCart,
   RefreshCw,
@@ -32,6 +33,7 @@ interface ProductPurchaseProps {
     publishPrice: number;
     storeOptimizationPrice: number;
     demoUrl: string | null;
+    demoApk?: string | null;
     category: {
       personalBuyerFee: number;
       commercialBuyerFee: number;
@@ -48,7 +50,7 @@ export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurc
   const [reskin, setReskin] = useState(false);
   const [publish, setPublish] = useState(false);
   const [storeOpt, setStoreOpt] = useState(false);
-  const { addToCart, loading, added } = useAddToCart();
+  const { addToCart, loading, added, modalOpen, setModalOpen, addedItem } = useAddToCart();
   const { toast } = useToast();
 
   const handleDownloadClick = (e: React.MouseEvent) => {
@@ -210,71 +212,81 @@ export function ProductPurchaseSidebar({ product, isAdmin = false }: ProductPurc
             Admins cannot purchase
           </Button>
         ) : (
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={loading}
-            onClick={() =>
-              addToCart({
-                productId: product.id,
-                license,
-                isExtended,
-                reskinSelected: reskin,
-                publishSelected: publish,
-                storeOptimizationSelected: storeOpt,
-              })
-            }
-          >
-            {loading ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Adding...
-              </>
-            ) : added ? (
-              <>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Added! View Cart
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
-              </>
-            )}
-          </Button>
+          <>
+            <Button
+              className="w-full"
+              size="lg"
+              disabled={loading}
+              onClick={() =>
+                addToCart({
+                  productId: product.id,
+                  license,
+                  isExtended,
+                  reskinSelected: reskin,
+                  publishSelected: publish,
+                  storeOptimizationSelected: storeOpt,
+                })
+              }
+            >
+              {loading ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Adding...
+                </>
+              ) : added ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Added! View Cart
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+
+            <AddedToCartModal
+              open={modalOpen}
+              onOpenChange={setModalOpen}
+              item={addedItem}
+            />
+          </>
         )}
 
-        <Button variant="outline" className="w-full" size="lg" asChild>
-          <a
-            href={product.demoUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
+        {/* Demo APK Download Button for Prospective Buyers */}
+        {product.demoApk || product.demoUrl ? (
+          <Button 
+            variant="outline" 
+            className="w-full border-primary/30 text-primary hover:bg-primary/5 font-semibold" 
+            size="lg" 
+            asChild
           >
-            <Eye className="mr-2 h-4 w-4" />
-            Live Preview
-          </a>
-        </Button>
-
-        <Button 
-          variant={product.hasPurchased ? "default" : "outline"} 
-          className="w-full" 
-          size="lg" 
-          asChild
-          onClick={handleDownloadClick}
-        >
-          <a
-            href={product.hasPurchased ? (product.fileUrl || "#") : "#"}
-            target={product.hasPurchased ? "_blank" : undefined}
-            download={product.hasPurchased}
-          >
-            {product.hasPurchased ? (
+            <a
+              href={product.demoApk || product.demoUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Download className="mr-2 h-4 w-4" />
-            ) : (
-              <Lock className="mr-2 h-4 w-4 text-muted-foreground" />
-            )}
-            Download APK
-          </a>
-        </Button>
+              Download Demo APK (Free)
+            </a>
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            className="w-full text-muted-foreground cursor-not-allowed opacity-70" 
+            size="lg" 
+            onClick={() => {
+              toast({
+                title: "Notice",
+                description: "No Demo APK or Google Drive link is available for this product.",
+              });
+            }}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Download Demo APK (Free)
+          </Button>
+        )}
 
         <Separator />
 

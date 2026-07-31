@@ -34,6 +34,8 @@ model User {
   role              Role     @default(BUYER)
   password          String   // bcrypt hash; $2y$ prefix tolerated for migration
   countryName       String?
+  state             String?
+  city              String?
   balance           Float    @default(0)
   totalReview       Int      @default(0)
   avgRating         Float    @default(0)
@@ -224,6 +226,7 @@ model Product {
   thumbnail                String?
   approvedBy               String?  // reviewer id
   demoUrl                  String?
+  demoApk                  String?  // Demo APK file URL for testing
   previewVideo             String?  // YouTube URL
   attributeInfo            String   @default("{}") // JSON
   previewImage             String?
@@ -859,4 +862,18 @@ model Policy {
   updatedAt DateTime @updatedAt
 
   @@map("policies")
+}
+
+model PaymentSetting {
+  id                  String   @id @default("default")
+  razorpayEnabled     Boolean  @default(true)
+  razorpayKeyId       String   @default("")
+  razorpayKeySecret   String   @default("")
+  paypalEnabled       Boolean  @default(true)
+  paypalClientId      String   @default("")
+  paypalClientSecret  String   @default("")
+  paypalMode          String   @default("sandbox") // "sandbox" | "live"
+  updatedAt           DateTime @updatedAt
+
+  @@map("payment_settings")
 }

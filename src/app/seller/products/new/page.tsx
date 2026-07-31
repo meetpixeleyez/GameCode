@@ -39,6 +39,7 @@ export default function NewProductPage() {
   // File states
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [mainFile, setMainFile] = useState<File | null>(null);
+  const [demoApkFile, setDemoApkFile] = useState<File | null>(null);
   const [screenshotsFiles, setScreenshotsFiles] = useState<File[]>([]);
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function NewProductPage() {
     const formData = new FormData();
     if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
     if (mainFile) formData.append("tempFile", mainFile);
+    if (demoApkFile) formData.append("demoApk", demoApkFile);
     
     if (screenshotsFiles.length > 0) {
       for (let i = 0; i < screenshotsFiles.length; i++) {
@@ -110,6 +112,7 @@ export default function NewProductPage() {
           tags: form.tags,
           thumbnail: uploadedFiles.thumbnail,
           tempFile: uploadedFiles.tempFile,
+          demoApk: uploadedFiles.demoApk || "",
           inlinePreviewImage: uploadedFiles.inlinePreviewImage ? JSON.stringify(Array.isArray(uploadedFiles.inlinePreviewImage) ? uploadedFiles.inlinePreviewImage : [uploadedFiles.inlinePreviewImage]) : "[]",
         }),
       });
@@ -274,6 +277,30 @@ export default function NewProductPage() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">ZIP all the files for buyers.</p>
+            </div>
+            <div className="space-y-3">
+              <Label>Demo APK File</Label>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="demoApkFile" className="flex items-center justify-center px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer rounded-md border text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose File
+                  </Label>
+                  <Input id="demoApkFile" type="file" accept=".apk,.zip,.rar" className="hidden" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) setDemoApkFile(e.target.files[0]);
+                  }} />
+                  {!demoApkFile && <span className="text-sm text-muted-foreground">No file chosen</span>}
+                </div>
+                {demoApkFile && (
+                  <div className="flex items-center justify-between p-3 border rounded-md max-w-sm">
+                    <span className="text-sm truncate mr-4">{demoApkFile.name}</span>
+                    <button type="button" onClick={() => setDemoApkFile(null)} className="text-muted-foreground hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Upload Demo APK for prospective buyers to test before purchasing.</p>
             </div>
             <div className="space-y-3">
               <Label>Screenshots</Label>

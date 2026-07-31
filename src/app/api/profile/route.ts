@@ -22,6 +22,8 @@ export async function GET() {
         dialCode: true,
         mobile: true,
         countryName: true,
+        state: true,
+        city: true,
       },
     });
 
@@ -48,6 +50,8 @@ const updateSchema = z.object({
   dialCode: z.string().max(10).optional().nullable(),
   mobile: z.string().max(20).optional().nullable(),
   countryName: z.string().max(255).optional().nullable(),
+  state: z.string().max(255).optional().nullable(),
+  city: z.string().max(255).optional().nullable(),
 });
 
 // PATCH /api/profile — updates user profile
@@ -99,6 +103,8 @@ export async function PATCH(req: NextRequest) {
         dialCode: true,
         mobile: true,
         countryName: true,
+        state: true,
+        city: true,
       },
     });
 
