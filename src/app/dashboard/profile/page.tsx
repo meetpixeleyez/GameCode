@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, User, Mail, Phone, Globe, Shield } from "lucide-react";
+import { Loader2, Save, User, Mail, Phone, Globe, Shield, KeyRound, ArrowRight } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
 import { COUNTRIES, STATES_AND_CITIES } from "@/lib/countries";
@@ -270,20 +270,32 @@ export default function ProfilePage() {
         </Card>
 
         {/* Security */}
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Security Settings
+        <Card className="border-border/60 shadow-sm overflow-hidden bg-card/60 backdrop-blur-xs relative group">
+          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-500 to-amber-500" />
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold flex items-center gap-2 text-foreground">
+              <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                <Shield className="h-5 w-5" />
+              </div>
+              <span>Security Settings</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium">Password</p>
-              <p className="text-xs text-muted-foreground">Change your account password securely anytime.</p>
+          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-muted/60 border border-border/50 text-muted-foreground shrink-0 mt-0.5 sm:mt-0">
+                <KeyRound className="h-4 w-4 text-orange-500" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-foreground">Password Management</p>
+                <p className="text-xs text-muted-foreground">Change your account password securely anytime to keep your account safe.</p>
+              </div>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href="/forgot-password">Change Password</a>
+            <Button variant="outline" size="sm" asChild className="rounded-xl border-orange-500/30 hover:border-orange-500 hover:bg-orange-500/10 text-xs font-semibold shadow-2xs shrink-0 transition-all">
+              <a href="/forgot-password" className="flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5 text-orange-500" />
+                <span>Change Password</span>
+                <ArrowRight className="h-3.5 w-3.5 opacity-70" />
+              </a>
             </Button>
           </CardContent>
         </Card>
